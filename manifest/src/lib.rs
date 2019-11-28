@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_json;
 use std::{
     collections::{HashMap, HashSet},
-    str::FromStr,
+    path::PathBuf,
 };
 use url::Url;
 
@@ -16,6 +16,15 @@ pub struct Links {
     pub project_source: Option<Url>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub donate: Option<Url>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct Publish {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub script: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resource: Option<PathBuf>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -38,9 +47,13 @@ pub struct Manifest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub features: Option<HashSet<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub icon: Option<Url>,
+    pub icon: Option<PathBuf>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<Links>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub publish: Option<Publish>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub readme: Option<PathBuf>,
 }
 
 impl Manifest {
@@ -48,20 +61,8 @@ impl Manifest {
         serde_json::from_str(s)
     }
 
-    pub fn to_string(&self, pretty: bool) -> serde_json::Result<String> {
-        if pretty {
-            serde_json::to_string_pretty(&self)
-        } else {
-            serde_json::to_string(&self)
-        }
-    }
-}
-
-impl FromStr for Manifest {
-    type Err = serde_json::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::from_str(s)
+    pub fn to_string(&self) -> serde_json::Result<String> {
+        serde_json::to_string_pretty(&self)
     }
 }
 
@@ -100,13 +101,7 @@ mod tests {
 
         let deserialised = Manifest::from_str(example).expect("Can't deserialise manifest");
         println!("{:#?}", deserialised);
-        let serialised = deserialised
-            .to_string(false)
-            .expect("Can't serialise manifest");
+        let serialised = deserialised.to_string().expect("Can't serialise manifest");
         println!("{}", serialised);
-        let serialised_pretty = deserialised
-            .to_string(true)
-            .expect("Can't serialise manifest");
-        println!("{}", serialised_pretty);
     }
 }
