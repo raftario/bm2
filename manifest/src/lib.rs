@@ -10,8 +10,11 @@ use url::Url;
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "kebab-case")]
 pub struct Links {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub project_home: Option<Url>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub project_source: Option<Url>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub donate: Option<Url>,
 }
 
@@ -24,12 +27,19 @@ pub struct Manifest {
     pub game_version: String,
     pub description: Vec<String>,
     pub author: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub depends_on: Option<HashMap<String, VersionReq>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub conflicts_with: Option<HashMap<String, VersionReq>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub load_after: Option<HashSet<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub load_before: Option<HashSet<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub features: Option<HashSet<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub icon: Option<Url>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<Links>,
 }
 
