@@ -12,8 +12,10 @@ use url::Url;
 pub struct Links {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub project_home: Option<Url>,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub project_source: Option<Url>,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub donate: Option<Url>,
 }
@@ -23,44 +25,62 @@ pub struct Links {
 pub struct Publish {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub script: Option<Vec<String>>,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub resource: Option<PathBuf>,
 }
 
+/// BeatMods2 Manifest (see https://github.com/raftario/BSIPA-MetadataFileSchema)
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Manifest {
-    pub name: String,
     pub id: String,
+
+    pub name: String,
+
     pub version: Version,
+
     pub game_version: String,
+
     pub description: Vec<String>,
+
     pub author: String,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub depends_on: Option<HashMap<String, VersionReq>>,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub conflicts_with: Option<HashMap<String, VersionReq>>,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub load_after: Option<HashSet<String>>,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub load_before: Option<HashSet<String>>,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub features: Option<HashSet<String>>,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon: Option<PathBuf>,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<Links>,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub publish: Option<Publish>,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub readme: Option<PathBuf>,
 }
 
 impl Manifest {
+    /// Parses the manifest from a JSON string
     pub fn from_str(s: &str) -> serde_json::Result<Self> {
         serde_json::from_str(s)
     }
 
+    /// Converts the manifest to a prettified JSON string
     pub fn to_string(&self) -> serde_json::Result<String> {
         serde_json::to_string_pretty(&self)
     }
