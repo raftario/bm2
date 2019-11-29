@@ -3,7 +3,7 @@ mod commands;
 /// Various utilities and helpers
 mod utils;
 
-use crate::commands::Command;
+use crate::commands::{Command, Run};
 use structopt::StructOpt;
 
 /// CLI for the Beat Saber mod repository BeatMods2
@@ -20,4 +20,5 @@ struct Opt {
 fn main() {
     let opt = Opt::from_args();
     println!("{:#?}", opt);
+    opt.cmd.run(opt.verbose);
 }

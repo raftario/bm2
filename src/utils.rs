@@ -12,7 +12,7 @@ use zip::{
 };
 
 /// Zips a folder into the passed writer and returns it
-pub fn zip_dir<P, W>(path: P, writer: W) -> ZipResult<W>
+pub fn zip_dir<P, W>(path: P, writer: W) -> ZipResult<()>
 where
     P: AsRef<Path>,
     W: Write + Seek,
@@ -40,5 +40,6 @@ where
         }
     }
 
-    zip.finish()
+    zip.finish()?;
+    Ok(())
 }

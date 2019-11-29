@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_json;
 use std::{
     collections::{HashMap, HashSet},
+    io::{Read, Write},
     path::PathBuf,
 };
 use url::Url;
@@ -76,13 +77,13 @@ pub struct Manifest {
 
 impl Manifest {
     /// Parses the manifest from a JSON string
-    pub fn from_str(s: &str) -> serde_json::Result<Self> {
-        serde_json::from_str(s)
+    pub fn from_reader<R: Read>(reader: R) -> serde_json::Result<Self> {
+        serde_json::from_reader(reader)
     }
 
     /// Converts the manifest to a prettified JSON string
-    pub fn to_string(&self) -> serde_json::Result<String> {
-        serde_json::to_string_pretty(&self)
+    pub fn to_writer<W: Write>(&self, writer: W) -> serde_json::Result<()> {
+        serde_json::to_writer_pretty(writer, &self)
     }
 }
 
