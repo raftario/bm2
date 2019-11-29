@@ -1,4 +1,7 @@
+/// CLI subcommands
 mod commands;
+/// Various utilities and helpers
+mod utils;
 
 use crate::commands::Command;
 use structopt::StructOpt;

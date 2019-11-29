@@ -9,6 +9,8 @@ description = "CLI for the Beat Saber mod repository BeatMods2"
 [dependencies]
 manifest = { path = "./manifest" }
 structopt = "0.3.5"
+walkdir = "2.2.9"
+zip = { version = "0.5.3", default-features = false, features = ["deflate", "time"] }
 
 [workspace]
 members = ["manifest"]
