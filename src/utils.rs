@@ -1,8 +1,10 @@
-use std::io::Read;
+use lazy_static::lazy_static;
 use std::{
+    env,
     fs::File,
-    io::{Seek, Write},
-    path::Path,
+    io::{Read, Seek, Write},
+    path::{Path, PathBuf},
+    process,
 };
 use walkdir::WalkDir;
 use zip::{
@@ -10,6 +12,13 @@ use zip::{
     write::FileOptions,
     ZipWriter,
 };
+
+lazy_static! {
+    pub static ref CWD: PathBuf = env::current_dir().unwrap_or_else(|_| {
+        eprintln!("Can't determine current working directory.");
+        process::exit(1)
+    });
+}
 
 /// Zips a folder into the passed writer and returns it
 pub fn zip_dir<P, W>(path: P, writer: W) -> ZipResult<()>
