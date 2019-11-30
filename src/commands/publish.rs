@@ -1,10 +1,10 @@
 use crate::{commands::Run, utils};
+use failure::{bail, Fallible, ResultExt};
 use manifest::Manifest;
 use std::{
     fs::{self, File},
     io::Cursor,
     path::PathBuf,
-    process,
 };
 use structopt::StructOpt;
 
@@ -16,102 +16,70 @@ pub struct Publish {
 }
 
 impl Run for Publish {
-    fn run(self, verbose: bool) {
-        let manifest = read_manifest();
+    fn run(self, verbose: bool) -> Fallible<()> {
+        let manifest = read_manifest()?;
         println!("{:#?}", manifest);
-        run_commands(&manifest);
-        let resource = get_resource(&self.file, &manifest);
+        run_commands(&manifest).context("Failed to run script specified in manifest")?;
+        let resource = if let Some(file) = self.file {
+            fs::read(file).context("Failed to read specified file to publish")?
+        } else if let Some(resource) = &manifest.publish.resource {
+            read_resource(resource).context("Failed to read resource specified in manifest")?
+        } else {
+            bail!("No resource to publish specified");
+        };
+        Ok(())
     }
 }
 
 /// Reads and parses the `manifest.json` file
-fn read_manifest() -> Manifest {
-    eprintln!("Reading manifest...");
+fn read_manifest() -> Fallible<Manifest> {
+    println!("Reading manifest...");
 
     let manifest_path = PathBuf::from("manifest.json");
     if !manifest_path.exists() {
-        eprintln!("Can't find manifest file, make sure you are running from the same directory.");
-        process::exit(1)
+        bail!("Can't find manifest file, make sure you are running from the same directory.");
     }
 
-    let manifest_file = File::open(manifest_path).unwrap_or_else(|e| {
-        eprintln!("Can't read manifest file: {}", e);
-        process::exit(1)
-    });
-    Manifest::from_reader(&manifest_file).unwrap_or_else(|e| {
-        eprintln!("Invalid manifest file: {}", e);
-        process::exit(1)
-    })
+    let manifest_file = File::open(manifest_path).context("Failed to read manifest file")?;
+    Ok(Manifest::from_reader(&manifest_file).context("Invalid manifest file")?)
 }
 
 /// Runs the publish script commands from the manifest
-fn run_commands(manifest: &Manifest) {
+fn run_commands(manifest: &Manifest) -> Fallible<()> {
     print!("Running commands... ");
 
-    let commands = match &manifest.publish.script {
-        Some(s) => s,
-        None => {
-            println!("No commands.");
-            return;
-        }
+    let script = &manifest.publish.script;
+    if script.is_empty() {
+        print!("No commands.");
     };
     println!();
-    for command in commands {
+    for command in script {
         println!("$ {}", &command);
 
-        let output = utils::shell_exec(&command);
-        match output {
-            Ok(o) if !o.success() => {
-                eprintln!("Command did not exit successfully.");
-                process::exit(1);
-            }
-            Ok(_) => {}
-            Err(e) => {
-                eprintln!("Can't run command: {}", e);
-                process::exit(1)
-            }
+        let o = utils::shell_exec(&command).context("Failed to run command")?;
+        if !o.success() {
+            bail!("Command did not exit successfully.");
         }
     }
+    Ok(())
 }
 
 /// Obtains a byte buffer containing the resource to upload to BeatMods2
-fn get_resource(file: &Option<String>, manifest: &Manifest) -> Vec<u8> {
+fn read_resource(resource_path: &PathBuf) -> Fallible<Vec<u8>> {
     println!("Getting resource ready...");
 
-    if let Some(f) = file {
-        return fs::read(f).unwrap_or_else(|e| {
-            eprintln!("Can't read specified file: {}", e);
-            process::exit(1);
-        });
-    }
-
-    let resource_path = match &manifest.publish.resource {
-        Some(p) => p,
-        None => {
-            eprintln!("No resource specified.");
-            process::exit(1);
-        }
-    };
-
     if !resource_path.exists() {
-        eprintln!("Can't find specified resource.");
-        process::exit(1);
+        bail!("Can't find specified resource.");
     }
 
     if resource_path.is_dir() {
         println!("Resource is a directory. Zipping...");
 
         let buffer = Cursor::new(Vec::new());
-        utils::zip_dir(resource_path, buffer)
-            .unwrap_or_else(|e| {
-                eprintln!("Error zipping directory: {}", e);
-                process::exit(1);
-            })
-            .into_inner()
+        Ok(utils::zip_dir(resource_path, buffer)
+            .context("Failed to zip directory")?
+            .into_inner())
     } else {
-        fs::read(resource_path).unwrap_or_else(|e| {
-            eprintln!("Can't read specified resource: {}", e);
-            process::exit(1);
-        })
+        Ok(fs::read(resource_path)?)
     }
 }

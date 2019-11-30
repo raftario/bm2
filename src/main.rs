@@ -19,5 +19,16 @@ struct Opt {
 
 fn main() {
     let opt = Opt::from_args();
-    opt.cmd.run(opt.verbose);
+    if let Err(err) = opt.cmd.run(opt.verbose) {
+        eprintln!("Error: {}", err);
+        for cause in err.iter_causes() {
+            eprintln!("  caused by: {}", cause);
+        }
+        // Use RUST_BACKTRACE=1 to enable
+        let backtrace = err.backtrace();
+        if !backtrace.is_empty() {
+            eprintln!("\n{}", backtrace);
+        }
+        std::process::exit(1);
+    }
 }

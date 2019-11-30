@@ -25,8 +25,9 @@ pub struct Links {
 #[derive(Serialize, Deserialize, Debug, Default, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Publish {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub script: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "is_default")]
+    #[serde(default)]
+    pub script: Vec<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub resource: Option<PathBuf>,

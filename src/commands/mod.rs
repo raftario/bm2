@@ -1,6 +1,7 @@
 mod publish;
 
 use crate::commands::publish::Publish;
+use failure::Fallible;
 use structopt::StructOpt;
 
 /// Available commands
@@ -13,11 +14,11 @@ pub enum Command {
 /// Run function, the trait is not really needed but it's a nice convention
 pub trait Run {
     /// Runs the command
-    fn run(self, verbose: bool);
+    fn run(self, verbose: bool) -> Fallible<()>;
 }
 
 impl Run for Command {
-    fn run(self, verbose: bool) {
+    fn run(self, verbose: bool) -> Fallible<()> {
         match self {
             Command::Publish(p) => p.run(verbose),
         }
