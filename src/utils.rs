@@ -22,7 +22,7 @@ lazy_static! {
 }
 
 /// Zips a folder into the passed writer and returns it
-pub fn zip_dir<P, W>(path: P, writer: W) -> ZipResult<()>
+pub fn zip_dir<P, W>(path: P, writer: W) -> ZipResult<W>
 where
     P: AsRef<Path>,
     W: Write + Seek,
@@ -50,8 +50,7 @@ where
         }
     }
 
-    zip.finish()?;
-    Ok(())
+    zip.finish()
 }
 
 /// Runs a command using the OS specific shell and current working directory
