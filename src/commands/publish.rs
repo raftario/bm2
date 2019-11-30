@@ -96,6 +96,7 @@ fn get_resource(file: &Option<String>, manifest: &Manifest) -> Vec<u8> {
         .resource
         .as_ref()
         .unwrap();
+    let resource_path = CWD.join(resource_path);
 
     if !resource_path.exists() {
         eprintln!("Can't find specified resource.");
