@@ -1,10 +1,8 @@
-use lazy_static::lazy_static;
 use std::{
-    env,
     fs::File,
     io::{self, Read, Seek, Write},
-    path::{Path, PathBuf},
-    process::{self, Command, Output},
+    path::Path,
+    process::{Command, ExitStatus},
 };
 use walkdir::WalkDir;
 use zip::{
@@ -12,14 +10,6 @@ use zip::{
     write::FileOptions,
     ZipWriter,
 };
-
-lazy_static! {
-    /// Application current working directory
-    pub static ref CWD: PathBuf = env::current_dir().unwrap_or_else(|_| {
-        eprintln!("Can't determine current working directory.");
-        process::exit(1)
-    });
-}
 
 /// Zips a folder into the passed writer and returns it
 pub fn zip_dir<P, W>(path: P, writer: W) -> ZipResult<W>
@@ -31,8 +21,14 @@ where
     let options = FileOptions::default().unix_permissions(0o755);
 
     let mut buffer = Vec::new();
-    let walkdir = WalkDir::new(&path).into_iter().filter_map(|e| e.ok());
-    for entry in walkdir {
+    for entry in WalkDir::new(&path) {
+        let entry = match entry {
+            Ok(e) => e,
+            Err(e) => {
+                eprintln!("Warning: error walking directory to zip: {}", e);
+                continue;
+            }
+        };
         let entry_path = entry.path();
         let entry_name = entry_path
             .strip_prefix(&path)
@@ -54,18 +50,11 @@ where
 }
 
 /// Runs a command using the OS specific shell and current working directory
-pub fn shell_exec(command: &str) -> io::Result<Output> {
+/// Output is not captured, so it's forwarded to our stdout/stderr
+pub fn shell_exec(command: &str) -> io::Result<ExitStatus> {
     if cfg!(target_os = "windows") {
-        Command::new("cmd")
-            .arg("/C")
-            .arg(&command)
-            .current_dir(&*CWD)
-            .output()
+        Command::new("cmd").arg("/C").arg(&command).status()
     } else {
-        Command::new("sh")
-            .arg("-c")
-            .arg(&command)
-            .current_dir(&*CWD)
-            .output()
+        Command::new("sh").arg("-c").arg(&command).status()
     }
 }

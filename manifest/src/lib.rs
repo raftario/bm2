@@ -5,10 +5,11 @@ use std::{
     collections::{HashMap, HashSet},
     io::{Read, Write},
     path::PathBuf,
+    str::FromStr,
 };
 use url::Url;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct Links {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -21,7 +22,7 @@ pub struct Links {
     pub donate: Option<Url>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Publish {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -31,8 +32,12 @@ pub struct Publish {
     pub resource: Option<PathBuf>,
 }
 
+fn is_default<T: Default + PartialEq>(arg: &T) -> bool {
+    arg == &Default::default()
+}
+
 /// BeatMods2 Manifest (see https://github.com/raftario/BSIPA-MetadataFileSchema)
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Manifest {
     pub id: String,
@@ -65,11 +70,13 @@ pub struct Manifest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon: Option<PathBuf>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub links: Option<Links>,
+    #[serde(skip_serializing_if = "is_default")]
+    #[serde(default)]
+    pub links: Links,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub publish: Option<Publish>,
+    #[serde(skip_serializing_if = "is_default")]
+    #[serde(default)]
+    pub publish: Publish,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub readme: Option<PathBuf>,
@@ -86,14 +93,18 @@ impl Manifest {
         serde_json::to_writer_pretty(writer, &self)
     }
 
-    /// Parses the manifest from a JSON string
-    pub fn from_str(s: &str) -> serde_json::Result<Self> {
-        serde_json::from_str(s)
-    }
-
     /// Converts the manifest to a prettified JSON string
     pub fn to_string(&self) -> serde_json::Result<String> {
         serde_json::to_string_pretty(&self)
+    }
+}
+
+/// Parses the manifest from a JSON string
+impl FromStr for Manifest {
+    type Err = serde_json::Error;
+
+    fn from_str(s: &str) -> serde_json::Result<Manifest> {
+        serde_json::from_str(s)
     }
 }
 
@@ -167,7 +178,9 @@ mod tests {
           }
         }
         "#;
-        let deserialised = Manifest::from_str(str_source).expect("Can't deserialise manifest");
+        let deserialised = str_source
+            .parse::<Manifest>()
+            .expect("Can't deserialise manifest");
         println!("{:#?}", deserialised);
         let serialised = deserialised.to_string().expect("Can't serialise manifest");
         println!("{}", serialised);
