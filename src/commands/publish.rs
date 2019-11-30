@@ -73,6 +73,7 @@ fn run_commands(manifest: &Manifest) {
     }
 }
 
+/// Obtains a byte buffer containing the resource to upload to BeatMods2
 fn get_resource(file: &Option<String>, manifest: &Manifest) -> Vec<u8> {
     println!("Getting resource ready...");
 
