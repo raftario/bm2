@@ -76,14 +76,24 @@ pub struct Manifest {
 }
 
 impl Manifest {
-    /// Parses the manifest from a JSON string
+    /// Reads the manifest from a JSON reader
     pub fn from_reader<R: Read>(reader: R) -> serde_json::Result<Self> {
         serde_json::from_reader(reader)
     }
 
-    /// Converts the manifest to a prettified JSON string
+    /// Writes the prettified JSON manifest to a writer
     pub fn to_writer<W: Write>(&self, writer: W) -> serde_json::Result<()> {
         serde_json::to_writer_pretty(writer, &self)
+    }
+
+    /// Parses the manifest from a JSON string
+    pub fn from_str(s: &str) -> serde_json::Result<Self> {
+        serde_json::from_str(s)
+    }
+
+    /// Converts the manifest to a prettified JSON string
+    pub fn to_string(&self) -> serde_json::Result<String> {
+        serde_json::to_string_pretty(&self)
     }
 }
 
@@ -92,8 +102,8 @@ mod tests {
     use crate::Manifest;
 
     #[test]
-    fn it_works() {
-        let example = r#"
+    fn reader_writer() {
+        let reader = br#"
         {
           "$schema": "./Schema.json",
           "name": "Beat Saber IPA",
@@ -119,8 +129,45 @@ mod tests {
           }
         }
         "#;
+        let deserialised =
+            Manifest::from_reader(reader.as_ref()).expect("Can't deserialise manifest");
+        println!("{:#?}", deserialised);
+        let mut serialised = Vec::new();
+        deserialised
+            .to_writer(&mut serialised)
+            .expect("Can't serialise manifest");
+        println!("{}", String::from_utf8(serialised).unwrap());
+    }
 
-        let deserialised = Manifest::from_str(example).expect("Can't deserialise manifest");
+    #[test]
+    fn str_string() {
+        let str_source = r#"
+        {
+          "$schema": "./Schema.json",
+          "name": "Beat Saber IPA",
+          "id": "beatsaber-ipa-reloaded",
+          "description": [
+            "A modified build of IPA for Beat Saber.",
+            "",
+            "Multiline description."
+          ],
+          "version": "3.12.13",
+          "gameVersion": "0.13.2",
+          "author": "DaNike",
+          "dependsOn": {
+            "ScoreSaber": "^1.7.2"
+          },
+          "conflictsWith": {
+            "Song Loader": "^4.3.2"
+          },
+          "features": [],
+          "links": {
+            "project-source": "https://github.com/beat-saber-modding-group/BeatSaber-IPA-Reloaded",
+            "project-home": "https://github.com/beat-saber-modding-group/BeatSaber-IPA-Reloaded/wiki"
+          }
+        }
+        "#;
+        let deserialised = Manifest::from_str(str_source).expect("Can't deserialise manifest");
         println!("{:#?}", deserialised);
         let serialised = deserialised.to_string().expect("Can't serialise manifest");
         println!("{}", serialised);
