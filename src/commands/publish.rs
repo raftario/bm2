@@ -1,9 +1,9 @@
-use crate::{commands::Run, utils::CWD};
-use manifest::Manifest;
-use std::{
-    fs::File,
-    process::{self, Command},
+use crate::{
+    commands::Run,
+    utils::{self, CWD},
 };
+use manifest::Manifest;
+use std::{fs::File, process};
 use structopt::StructOpt;
 
 /// Publish command options
@@ -21,6 +21,7 @@ impl Run for Publish {
     }
 }
 
+/// Reads and parses the `manifest.json` file
 fn read_manifest() -> Manifest {
     eprintln!("Reading manifest...");
 
@@ -40,6 +41,7 @@ fn read_manifest() -> Manifest {
     })
 }
 
+/// Runs the publish script commands from the manifest
 fn run_commands(manifest: &Manifest) {
     print!("Running commands... ");
 
@@ -53,20 +55,9 @@ fn run_commands(manifest: &Manifest) {
     for command in commands {
         println!("$ {}", &command);
 
-        let output = if cfg!(target_os = "windows") {
-            Command::new("cmd")
-                .arg("/C")
-                .arg(&command)
-                .current_dir(&*CWD)
-                .output()
-        } else {
-            Command::new("sh")
-                .arg("-c")
-                .arg(&command)
-                .current_dir(&*CWD)
-                .output()
-        };
+        let output = utils::shell_exec(&command);
 
+        // If a command execution fails, publishing is cancelled
         if let Ok(o) = output {
             if !o.status.success() {
                 eprintln!("Command did not exit successfully.");

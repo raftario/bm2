@@ -10,7 +10,9 @@ pub enum Command {
     Publish(Publish),
 }
 
+/// Run function, the trait is not really needed but it's a nice convention
 pub trait Run {
+    /// Runs the command
     fn run(self, verbose: bool);
 }
 

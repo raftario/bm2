@@ -2,9 +2,9 @@ use lazy_static::lazy_static;
 use std::{
     env,
     fs::File,
-    io::{Read, Seek, Write},
+    io::{self, Read, Seek, Write},
     path::{Path, PathBuf},
-    process,
+    process::{self, Command, Output},
 };
 use walkdir::WalkDir;
 use zip::{
@@ -14,6 +14,7 @@ use zip::{
 };
 
 lazy_static! {
+    /// Application current working directory
     pub static ref CWD: PathBuf = env::current_dir().unwrap_or_else(|_| {
         eprintln!("Can't determine current working directory.");
         process::exit(1)
@@ -51,4 +52,21 @@ where
 
     zip.finish()?;
     Ok(())
+}
+
+/// Runs a command using the OS specific shell and current working directory
+pub fn shell_exec(command: &str) -> io::Result<Output> {
+    if cfg!(target_os = "windows") {
+        Command::new("cmd")
+            .arg("/C")
+            .arg(&command)
+            .current_dir(&*CWD)
+            .output()
+    } else {
+        Command::new("sh")
+            .arg("-c")
+            .arg(&command)
+            .current_dir(&*CWD)
+            .output()
+    }
 }
