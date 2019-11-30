@@ -103,14 +103,14 @@ fn get_resource(file: &Option<String>, manifest: &Manifest) -> Vec<u8> {
 
         let buffer = Cursor::new(Vec::new());
         utils::zip_dir(resource_path, buffer)
-            .unwrap_or_else(|_| {
-                eprintln!("Error zipping directory.");
+            .unwrap_or_else(|e| {
+                eprintln!("Error zipping directory: {}", e);
                 process::exit(1);
             })
             .into_inner()
     } else {
-        fs::read(resource_path).unwrap_or_else(|_| {
-            eprintln!("Can't read specified resource.");
+        fs::read(resource_path).unwrap_or_else(|e| {
+            eprintln!("Can't read specified resource: {}", e);
             process::exit(1);
         })
     }
