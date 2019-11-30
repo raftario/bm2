@@ -12,6 +12,7 @@ structopt = "0.3.5"
 walkdir = "2.2.9"
 zip = { version = "0.5.3", default-features = false, features = ["deflate", "time"] }
 failure = "0.1.6"
+enum_dispatch = "0.2.0"
 
 [workspace]
 members = ["manifest"]
