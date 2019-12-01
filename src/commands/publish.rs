@@ -1,5 +1,5 @@
 use crate::{commands::Run, utils};
-use anyhow::{bail, Result, Context};
+use anyhow::{bail, Context, Result};
 use manifest::Manifest;
 use std::{
     fs::{self, File},
