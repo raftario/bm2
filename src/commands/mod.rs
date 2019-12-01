@@ -2,7 +2,7 @@ mod publish;
 
 use crate::commands::publish::Publish;
 use enum_dispatch::enum_dispatch;
-use failure::Fallible;
+use anyhow::Result;
 use structopt::StructOpt;
 
 /// Available commands
@@ -17,5 +17,5 @@ pub enum Command {
 #[enum_dispatch]
 pub trait Run {
     /// Runs the command
-    fn run(self, verbose: bool) -> Fallible<()>;
+    fn run(self, verbose: bool) -> Result<()>;
 }

@@ -1,5 +1,5 @@
 use crate::{commands::Run, utils};
-use failure::{bail, Fallible, ResultExt};
+use anyhow::{bail, Result, Context};
 use manifest::Manifest;
 use std::{
     fs::{self, File},
@@ -16,7 +16,7 @@ pub struct Publish {
 }
 
 impl Run for Publish {
-    fn run(self, verbose: bool) -> Fallible<()> {
+    fn run(self, verbose: bool) -> Result<()> {
         let manifest = read_manifest()?;
         println!("{:#?}", manifest);
         run_commands(&manifest).context("Failed to run script specified in manifest")?;
@@ -32,7 +32,7 @@ impl Run for Publish {
 }
 
 /// Reads and parses the `manifest.json` file
-fn read_manifest() -> Fallible<Manifest> {
+fn read_manifest() -> Result<Manifest> {
     println!("Reading manifest...");
 
     let manifest_path = PathBuf::from("manifest.json");
@@ -45,7 +45,7 @@ fn read_manifest() -> Fallible<Manifest> {
 }
 
 /// Runs the publish script commands from the manifest
-fn run_commands(manifest: &Manifest) -> Fallible<()> {
+fn run_commands(manifest: &Manifest) -> Result<()> {
     print!("Running commands... ");
 
     let script = &manifest.publish.script;
@@ -65,7 +65,7 @@ fn run_commands(manifest: &Manifest) -> Fallible<()> {
 }
 
 /// Obtains a byte buffer containing the resource to upload to BeatMods2
-fn read_resource(resource_path: &PathBuf) -> Fallible<Vec<u8>> {
+fn read_resource(resource_path: &PathBuf) -> Result<Vec<u8>> {
     println!("Getting resource ready...");
 
     if !resource_path.exists() {

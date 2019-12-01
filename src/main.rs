@@ -1,9 +1,12 @@
+#![cfg_attr(feature = "nightly", feature(backtrace))]
+
 /// CLI subcommands
 mod commands;
 /// Various utilities and helpers
 mod utils;
 
 use crate::commands::{Command, Run};
+use anyhow::Result;
 use structopt::StructOpt;
 
 /// CLI for the Beat Saber mod repository BeatMods2
@@ -17,18 +20,7 @@ struct Opt {
     cmd: Command,
 }
 
-fn main() {
+fn main() -> Result<()> {
     let opt = Opt::from_args();
-    if let Err(err) = opt.cmd.run(opt.verbose) {
-        eprintln!("Error: {}", err);
-        for cause in err.iter_causes() {
-            eprintln!("  caused by: {}", cause);
-        }
-        // Use RUST_BACKTRACE=1 to enable
-        let backtrace = err.backtrace();
-        if !backtrace.is_empty() {
-            eprintln!("\n{}", backtrace);
-        }
-        std::process::exit(1);
-    }
+    opt.cmd.run(opt.verbose)
 }
