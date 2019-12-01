@@ -1,25 +1,38 @@
 mod publish;
 
 use crate::commands::publish::Publish;
+use anyhow::Result;
 use structopt::StructOpt;
-
-/// Available commands
-#[derive(StructOpt, Debug)]
-pub enum Command {
-    /// Publishes this mod to BeatMods2
-    Publish(Publish),
-}
 
 /// Run function, the trait is not really needed but it's a nice convention
 pub trait Run {
     /// Runs the command
-    fn run(self, verbose: bool);
+    fn run(self, verbose: bool) -> Result<()>;
 }
 
-impl Run for Command {
-    fn run(self, verbose: bool) {
-        match self {
-            Command::Publish(p) => p.run(verbose),
+macro_rules! create_command {
+    ($($name:ident : $doc:literal,)*) => {
+        /// Available commands
+        #[derive(StructOpt, Debug)]
+        pub enum Command {
+            $(
+                #[doc=$doc]
+                $name($name),
+            )*
+        }
+
+        impl Run for Command {
+            fn run(self, verbose: bool) -> Result<()> {
+                match self {
+                    $(
+                        Self::$name(c) => c.run(verbose),
+                    )*
+                }
+            }
         }
     }
 }
+
+create_command!(
+    Publish: "Publishes this mod to BeatMods2",
+);
