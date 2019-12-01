@@ -1,7 +1,10 @@
 [package]
 name = "bm2"
 version = "0.1.0"
-authors = ["Raphaël Thériault <raphael_theriault@outlook.com>"]
+authors = [
+    "Raphaël Thériault <raphael_theriault@outlook.com>",
+    "Lee Bousfield",
+]
 edition = "2018"
 license = "MIT"
 description = "CLI for the Beat Saber mod repository BeatMods2"
