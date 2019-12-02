@@ -1,9 +1,9 @@
 use crate::{commands::Run, utils};
 use anyhow::{bail, Context, Result};
-use manifest::Manifest;
+use manifest::{Manifest, Validity};
 use reqwest::{
     multipart::{Form, Part},
-    ClientBuilder, Response,
+    ClientBuilder,
 };
 use std::{
     fs::{self, File},
@@ -60,8 +60,12 @@ impl Run for Publish {
         }
 
         let manifest = read_manifest()?;
-        if !&manifest.is_valid() {
-            bail!("Invalid manifest");
+        match manifest.validity() {
+            Validity::Valid => (),
+            Validity::InvalidId => bail!("Invalid manifest `id`"),
+            Validity::InvalidName => bail!("Invalid manifest `name`"),
+            Validity::InvalidDescription => bail!("Invalid manifest `description`"),
+            Validity::InvalidLinks => bail!("Invalid manifest `links`, make sure either `project-home` or `project-source is provided`"),
         }
         run_commands(&manifest, verbose).context("Failed to run script specified in manifest")?;
         let resource = if let Some(file) = self.file {
@@ -72,9 +76,7 @@ impl Run for Publish {
         } else {
             bail!("No resource to publish specified");
         };
-        let mut response =
-            publish_bm1(manifest, resource, self.category, self.user, self.password)?;
-        println!("{:#?}", response.text());
+        publish_bm1(manifest, resource, self.category, self.user, self.password)?;
         Ok(())
     }
 }
@@ -139,7 +141,7 @@ fn publish_bm1(
     category: String,
     user: String,
     password: String,
-) -> Result<Response> {
+) -> Result<()> {
     println!("Publishing to BeatMods1...");
 
     let version_string = manifest.version.to_string();
@@ -201,9 +203,11 @@ fn publish_bm1(
         .context("Invalid credentials")?
         .to_str()?;
 
-    Ok(client
+    client
         .post("https://beatmods.com/api/v1/mod/create/")
         .multipart(form)
         .bearer_auth(token)
-        .send()?)
+        .send()?;
+
+    Ok(())
 }

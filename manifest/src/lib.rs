@@ -94,6 +94,15 @@ pub struct Manifest {
     pub readme: Option<PathBuf>,
 }
 
+/// Manifest validity
+pub enum Validity {
+    Valid,
+    InvalidId,
+    InvalidName,
+    InvalidDescription,
+    InvalidLinks,
+}
+
 impl Manifest {
     /// Reads the manifest from a JSON reader
     pub fn from_reader<R: Read>(reader: R) -> serde_json::Result<Self> {
@@ -111,24 +120,24 @@ impl Manifest {
     }
 
     /// Validates the manifest against its schema's regexps
-    pub fn is_valid(&self) -> bool {
+    pub fn validity(&self) -> Validity {
         if !ID_REGEX.is_match(&self.id) {
-            return false;
+            return Validity::InvalidId;
         }
         if !NAME_REGEX.is_match(&self.name) {
-            return false;
+            return Validity::InvalidName;
         }
         if !&self
             .description
             .iter()
             .all(|l| DESCRIPTION_REGEX.is_match(l))
         {
-            return false;
+            return Validity::InvalidDescription;
         }
-        if self.links.project_home.is_some() && self.links.project_source.is_none() {
-            return false;
+        if self.links.project_home.is_none() && self.links.project_source.is_none() {
+            return Validity::InvalidLinks;
         }
-        true
+        Validity::Valid
     }
 }
 

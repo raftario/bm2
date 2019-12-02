@@ -6,7 +6,7 @@ mod commands;
 mod utils;
 
 use crate::commands::{Command, Run};
-use anyhow::Result;
+use std::process;
 use structopt::StructOpt;
 
 /// CLI for the Beat Saber mod repository BeatMods2
@@ -20,7 +20,14 @@ struct Opt {
     cmd: Command,
 }
 
-fn main() -> Result<()> {
+fn main() {
     let opt = Opt::from_args();
-    opt.cmd.run(opt.verbose)
+    let result = opt.cmd.run(opt.verbose);
+    match result {
+        Ok(_) => process::exit(0),
+        Err(e) => {
+            eprintln!("{:#}", e);
+            process::exit(1)
+        }
+    }
 }
