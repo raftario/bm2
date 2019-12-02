@@ -3,7 +3,7 @@ use anyhow::{bail, Context, Result};
 use manifest::Manifest;
 use reqwest::{
     multipart::{Form, Part},
-    Client,
+    Client, Response,
 };
 use std::{
     fs::{self, File},
@@ -42,6 +42,14 @@ pub struct Publish {
     /// Lists BeatMods1 categories (legacy)
     #[structopt(short, long)]
     list_categories: bool,
+
+    /// BeatMods1 user (legacy)
+    #[structopt(short, long, name = "USER")]
+    user: String,
+
+    /// BeatMods1 password (legacy)
+    #[structopt(short, long, name = "PASSWORD")]
+    password: String,
 }
 
 impl Run for Publish {
@@ -64,7 +72,9 @@ impl Run for Publish {
         } else {
             bail!("No resource to publish specified");
         };
-        publish_bm1(manifest, resource, self.category);
+        let mut response =
+            publish_bm1(manifest, resource, self.category, self.user, self.password)?;
+        println!("{:#?}", response.text());
         Ok(())
     }
 }
@@ -123,7 +133,13 @@ fn read_resource(resource_path: &PathBuf, verbose: bool) -> Result<Vec<u8>> {
 }
 
 /// Publishes the mod to BeatMods1 (legacy)
-fn publish_bm1(manifest: Manifest, resource: Vec<u8>, category: String) -> Result<()> {
+fn publish_bm1(
+    manifest: Manifest,
+    resource: Vec<u8>,
+    category: String,
+    user: String,
+    password: String,
+) -> Result<Response> {
     println!("Publishing to BeatMods1...");
 
     let version_string = manifest.version.to_string();
@@ -172,7 +188,22 @@ fn publish_bm1(manifest: Manifest, resource: Vec<u8>, category: String) -> Resul
         form = form.text("dependencies", dependencies_string);
     }
 
-    println!("{:#?}", form);
+    let client = Client::new();
 
-    Ok(())
+    let login_form = [("username", user), ("password", password)];
+    let login_response = client
+        .post("https://beatmods.com/api/v1/signIn")
+        .form(&login_form)
+        .send()?;
+    let token = login_response
+        .headers()
+        .get("x-access-token")
+        .context("Invalid credentials")?
+        .to_str()?;
+
+    Ok(client
+        .post("https://beatmods.com/api/v1/mod/create/")
+        .multipart(form)
+        .bearer_auth(token)
+        .send()?)
 }
