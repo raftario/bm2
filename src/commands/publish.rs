@@ -66,6 +66,7 @@ impl Run for Publish {
             Validity::InvalidName => bail!("Invalid manifest `name`"),
             Validity::InvalidDescription => bail!("Invalid manifest `description`"),
             Validity::InvalidLinks => bail!("Invalid manifest `links`, make sure either `project-home` or `project-source is provided`"),
+            Validity::InvalidLicense => bail!("Invalid manifest `license`, specified file must exist"),
         }
         run_commands(&manifest, verbose).context("Failed to run script specified in manifest")?;
         let resource = if let Some(file) = self.file {

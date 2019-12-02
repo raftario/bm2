@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json;
 use std::{
     collections::{HashMap, HashSet},
+    fs,
     io::{Read, Write},
     path::PathBuf,
     str::FromStr,
@@ -101,6 +102,7 @@ pub enum Validity {
     InvalidName,
     InvalidDescription,
     InvalidLinks,
+    InvalidLicense,
 }
 
 impl Manifest {
@@ -136,6 +138,12 @@ impl Manifest {
         }
         if self.links.project_home.is_none() && self.links.project_source.is_none() {
             return Validity::InvalidLinks;
+        }
+        if self.license.starts_with("FILE ") {
+            let license_file = self.license.replace("FILE ", "");
+            if fs::metadata(license_file).is_err() {
+                return Validity::InvalidLicense;
+            }
         }
         Validity::Valid
     }
