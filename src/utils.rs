@@ -7,7 +7,6 @@ use std::{
 };
 use walkdir::WalkDir;
 use zip::{
-    result::{ZipError, ZipResult},
     write::FileOptions,
     ZipWriter,
 };

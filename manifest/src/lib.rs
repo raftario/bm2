@@ -1,3 +1,5 @@
+use lazy_static::lazy_static;
+use regex::Regex;
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -8,6 +10,12 @@ use std::{
     str::FromStr,
 };
 use url::Url;
+
+lazy_static! {
+    pub static ref ID_REGEX: Regex = Regex::new(r#"^([A-Z][0-9a-z]*)+(\.([A-Z][0-9a-z]*)+)*$"#).unwrap();
+    pub static ref NAME_REGEX: Regex = Regex::new(r#"^[^\\n\\r\\t]+$"#).unwrap();
+    pub static ref DESCRIPTION_REGEX: Regex = Regex::new(r#"^[^\\n\\r]*$"#).unwrap();
+}
 
 #[derive(Serialize, Deserialize, Debug, Default, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
@@ -99,6 +107,20 @@ impl Manifest {
     /// Converts the manifest to a prettified JSON string
     pub fn to_string(&self) -> serde_json::Result<String> {
         serde_json::to_string_pretty(&self)
+    }
+
+    /// Validates the manifest against its schema's regexps
+    pub fn is_valid(&self) -> bool {
+        if !ID_REGEX.is_match(&self.id) {
+            return false;
+        }
+        if !NAME_REGEX.is_match(&self.name) {
+            return false;
+        }
+        if !&self.description.iter().all(|l| DESCRIPTION_REGEX.is_match(l)) {
+            return false;
+        }
+        true
     }
 }
 

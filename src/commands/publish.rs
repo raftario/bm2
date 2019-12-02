@@ -19,6 +19,9 @@ pub struct Publish {
 impl Run for Publish {
     fn run(self, verbose: bool) -> Result<()> {
         let manifest = read_manifest()?;
+        if !&manifest.is_valid() {
+            bail!("Invalid manifest");
+        }
         println!("{:#?}", manifest);
         run_commands(&manifest).context("Failed to run script specified in manifest")?;
         let resource = if let Some(file) = self.file {
