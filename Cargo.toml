@@ -2,7 +2,7 @@
 name = "bm2"
 version = "0.1.0"
 authors = [
-    "Raphaël Thériault <raphael_theriault@outlook.com>",
+    "Raphaël Thériault",
     "Lee Bousfield",
 ]
 edition = "2018"
@@ -10,11 +10,12 @@ license = "MIT"
 description = "CLI for the Beat Saber mod repository BeatMods2"
 
 [dependencies]
+anyhow = "1.0.25"
 manifest = { path = "./manifest" }
+reqwest = "0.9.22"
 structopt = "0.3.5"
 walkdir = "2.2.9"
 zip = { version = "0.5.3", default-features = false, features = ["deflate", "time"] }
-anyhow = "1.0.25"
 
 [features]
 nightly = []
