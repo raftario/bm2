@@ -1,3 +1,4 @@
+use anyhow::Result;
 use std::{
     fs::File,
     io::{self, Read, Seek, Write},
@@ -12,7 +13,7 @@ use zip::{
 };
 
 /// Zips a folder into the passed writer and returns it
-pub fn zip_dir<P, W>(path: P, writer: W) -> ZipResult<W>
+pub fn zip_dir<P, W>(path: P, writer: W) -> Result<W>
 where
     P: AsRef<Path>,
     W: Write + Seek,
@@ -22,17 +23,9 @@ where
 
     let mut buffer = Vec::new();
     for entry in WalkDir::new(&path) {
-        let entry = match entry {
-            Ok(e) => e,
-            Err(e) => {
-                eprintln!("Warning: error walking directory to zip: {}", e);
-                continue;
-            }
-        };
+        let entry = entry?;
         let entry_path = entry.path();
-        let entry_name = entry_path
-            .strip_prefix(&path)
-            .map_err(|_| ZipError::FileNotFound)?;
+        let entry_name = entry_path.strip_prefix(&path)?;
 
         if entry_path.is_file() {
             zip.start_file_from_path(entry_name, options)?;
@@ -46,7 +39,7 @@ where
         }
     }
 
-    zip.finish()
+    Ok(zip.finish()?)
 }
 
 /// Runs a command using the OS specific shell and current working directory
