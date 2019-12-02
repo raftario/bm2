@@ -3,7 +3,7 @@ use anyhow::{bail, Context, Result};
 use manifest::Manifest;
 use reqwest::{
     multipart::{Form, Part},
-    Client, Response,
+    ClientBuilder, Response,
 };
 use std::{
     fs::{self, File},
@@ -188,7 +188,7 @@ fn publish_bm1(
         form = form.text("dependencies", dependencies_string);
     }
 
-    let client = Client::new();
+    let client = ClientBuilder::new().cookie_store(true).build()?;
 
     let login_form = [("username", user), ("password", password)];
     let login_response = client
