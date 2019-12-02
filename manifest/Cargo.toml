@@ -1,7 +1,7 @@
 [package]
 name = "manifest"
 version = "0.1.0"
-authors = ["Raphaël Thériault <raphael_theriault@outlook.com>"]
+authors = ["Raphaël Thériault"]
 edition = "2018"
 license = "MIT"
 

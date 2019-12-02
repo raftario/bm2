@@ -53,6 +53,8 @@ pub struct Manifest {
 
     pub author: String,
 
+    pub license: String,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub depends_on: Option<HashMap<String, VersionReq>>,
 
@@ -128,6 +130,7 @@ mod tests {
           "version": "3.12.13",
           "gameVersion": "0.13.2",
           "author": "DaNike",
+          "license": "MIT",
           "dependsOn": {
             "ScoreSaber": "^1.7.2"
           },
@@ -166,6 +169,7 @@ mod tests {
           "version": "3.12.13",
           "gameVersion": "0.13.2",
           "author": "DaNike",
+          "license": "MIT",
           "dependsOn": {
             "ScoreSaber": "^1.7.2"
           },

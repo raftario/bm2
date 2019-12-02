@@ -12,6 +12,7 @@ use structopt::StructOpt;
 #[derive(StructOpt, Debug)]
 pub struct Publish {
     /// File to publish
+    #[structopt(name = "FILE")]
     file: Option<String>,
 }
 
