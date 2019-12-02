@@ -3,7 +3,7 @@ use anyhow::{bail, Context, Result};
 use manifest::{Manifest, Validity};
 use reqwest::{
     multipart::{Form, Part},
-    ClientBuilder,
+    ClientBuilder, StatusCode,
 };
 use std::{
     fs::{self, File},
@@ -203,11 +203,15 @@ fn publish_bm1(
         .context("Invalid credentials")?
         .to_str()?;
 
-    client
+    let mut response = client
         .post("https://beatmods.com/api/v1/mod/create/")
         .multipart(form)
         .bearer_auth(token)
         .send()?;
+
+    if response.status() != StatusCode::from_u16(200)? {
+        bail!("Publishing failed: {}", response.text()?);
+    }
 
     Ok(())
 }
