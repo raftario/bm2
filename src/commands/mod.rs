@@ -34,5 +34,5 @@ macro_rules! create_command {
 }
 
 create_command!(
-    Publish: "Publishes this mod to BeatMods2",
+    Publish: "Publishes this mod to BeatMods",
 );
