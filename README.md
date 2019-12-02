@@ -27,7 +27,7 @@ Just run `bm2 --help` to get started.
 ## Installation
 
 You can either download the tool from the releases page
-or run `cargo install bm2` if you have the Rust toolchain installed.
+or clone this repository and run `cargo install --path .` if you have the Rust toolchain installed.
 
 If you install from the releases, you'll need to add the directory where the tool is located
 to your `PATH` environment variable.
