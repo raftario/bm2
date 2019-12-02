@@ -23,11 +23,12 @@ impl Run for Publish {
             bail!("Invalid manifest");
         }
         println!("{:#?}", manifest);
-        run_commands(&manifest).context("Failed to run script specified in manifest")?;
+        run_commands(&manifest, verbose).context("Failed to run script specified in manifest")?;
         let resource = if let Some(file) = self.file {
             fs::read(file).context("Failed to read specified file")?
         } else if let Some(resource) = &manifest.publish.resource {
-            read_resource(resource).context("Failed to read resource specified in manifest")?
+            read_resource(resource, verbose)
+                .context("Failed to read resource specified in manifest")?
         } else {
             bail!("No resource to publish specified");
         };
@@ -49,7 +50,7 @@ fn read_manifest() -> Result<Manifest> {
 }
 
 /// Runs the publish script commands from the manifest
-fn run_commands(manifest: &Manifest) -> Result<()> {
+fn run_commands(manifest: &Manifest, verbose: bool) -> Result<()> {
     print!("Running commands... ");
 
     let script = &manifest.publish.script;
@@ -60,7 +61,7 @@ fn run_commands(manifest: &Manifest) -> Result<()> {
     for command in script {
         println!("$ {}", &command);
 
-        let o = utils::shell_exec(&command).context("Failed to run command")?;
+        let o = utils::shell_exec(&command, !verbose).context("Failed to run command")?;
         if !o.success() {
             bail!("Command did not exit successfully");
         }
@@ -69,7 +70,7 @@ fn run_commands(manifest: &Manifest) -> Result<()> {
 }
 
 /// Obtains a byte buffer containing the resource to upload to BeatMods2
-fn read_resource(resource_path: &PathBuf) -> Result<Vec<u8>> {
+fn read_resource(resource_path: &PathBuf, verbose: bool) -> Result<Vec<u8>> {
     println!("Getting resource ready...");
 
     if !resource_path.exists() {
@@ -80,7 +81,7 @@ fn read_resource(resource_path: &PathBuf) -> Result<Vec<u8>> {
         println!("Resource is a directory. Zipping...");
 
         let buffer = Cursor::new(Vec::new());
-        Ok(utils::zip_dir(resource_path, buffer)
+        Ok(utils::zip_dir(resource_path, buffer, verbose)
             .context("Failed to zip directory")?
             .into_inner())
     } else {
