@@ -3,7 +3,6 @@
 CLI for the Beat Saber mod repository BeatMods2
 
 [![GitHub Actions](https://github.com/raftario/bm2/workflows/Build/badge.svg)](https://github.com/raftario/bm2/actions?workflowID=Build)
-[![Crates.io](https://img.shields.io/crates/v/bm2.svg)](https://crates.io/crates/bm2)
 
 ## BeatMods1 compatibility
 
