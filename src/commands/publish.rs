@@ -104,7 +104,7 @@ fn run_commands(manifest: &Manifest, verbose: bool) -> Result<()> {
     for command in script {
         println!("$ {}", &command);
 
-        let o = utils::shell_exec(&command, !verbose).context("Failed to run command")?;
+        let o = utils::shell_exec(&command, verbose).context("Failed to run command")?;
         if !o.success() {
             bail!("Command did not exit successfully");
         }

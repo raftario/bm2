@@ -47,28 +47,18 @@ where
 }
 
 /// Runs a command using the OS specific shell and current working directory
-pub fn shell_exec(command: &str, capture: bool) -> io::Result<ExitStatus> {
-    if cfg!(target_os = "windows") {
-        if capture {
-            Command::new("cmd")
-                .arg("/C")
-                .arg(&command)
-                .stdout(Stdio::null())
-                .stderr(Stdio::null())
-                .status()
-        } else {
-            Command::new("cmd").arg("/C").arg(&command).status()
-        }
+pub fn shell_exec(command_str: &str, output: bool) -> io::Result<ExitStatus> {
+    let (shell, flag) = if cfg!(target_os = "windows") {
+        ("cmd", "/C")
     } else {
-        if capture {
-            Command::new("sh")
-                .arg("-c")
-                .arg(&command)
-                .stdout(Stdio::null())
-                .stderr(Stdio::null())
-                .status()
-        } else {
-            Command::new("sh").arg("-c").arg(&command).status()
-        }
+        ("sh", "-c")
+    };
+    let mut cmd = Command::new(shell);
+    cmd.arg(flag);
+    cmd.arg(&command_str);
+    if !output {
+        cmd.stdout(Stdio::null());
+        cmd.stderr(Stdio::null());
     }
+    cmd.status()
 }
