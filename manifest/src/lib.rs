@@ -14,8 +14,8 @@ use url::Url;
 lazy_static! {
     pub static ref ID_REGEX: Regex =
         Regex::new(r#"^([A-Z][0-9a-z]*)+(\.([A-Z][0-9a-z]*)+)*$"#).unwrap();
-    pub static ref NAME_REGEX: Regex = Regex::new(r#"^[^\\n\\r\\t]+$"#).unwrap();
-    pub static ref DESCRIPTION_REGEX: Regex = Regex::new(r#"^[^\\n\\r]*$"#).unwrap();
+    pub static ref NAME_REGEX: Regex = Regex::new(r#"^[^\n\r\t]+$"#).unwrap();
+    pub static ref DESCRIPTION_REGEX: Regex = Regex::new(r#"^[^\n\r]*$"#).unwrap();
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, PartialEq, Eq)]
@@ -123,6 +123,9 @@ impl Manifest {
             .iter()
             .all(|l| DESCRIPTION_REGEX.is_match(l))
         {
+            return false;
+        }
+        if self.links.project_home.is_some() && self.links.project_source.is_none() {
             return false;
         }
         true

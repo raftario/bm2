@@ -1,6 +1,10 @@
 use crate::{commands::Run, utils};
 use anyhow::{bail, Context, Result};
 use manifest::Manifest;
+use reqwest::{
+    multipart::{Form, Part},
+    Client,
+};
 use std::{
     fs::{self, File},
     io::Cursor,
@@ -8,21 +12,49 @@ use std::{
 };
 use structopt::StructOpt;
 
+/// BeatMods1 categories (legacy)
+static BM1_CATEGORIES: &[&str] = &[
+    "Other",
+    "Core",
+    "Cosmetic",
+    "Practice / Training",
+    "Gameplay",
+    "Stream Tools",
+    "Libraries",
+    "UI Enhancements",
+    "Lighting",
+    "Tweaks / Tools",
+    "Multiplayer",
+    "Text Changes",
+];
+
 /// Publish command options
 #[derive(StructOpt, Debug)]
 pub struct Publish {
     /// File to publish
     #[structopt(name = "FILE")]
     file: Option<String>,
+
+    /// BeatMods1 category (legacy)
+    #[structopt(short, long, name = "CATEGORY", default_value = "Other")]
+    category: String,
+
+    /// Lists BeatMods1 categories (legacy)
+    #[structopt(short, long)]
+    list_categories: bool,
 }
 
 impl Run for Publish {
     fn run(self, verbose: bool) -> Result<()> {
+        if self.list_categories {
+            println!("{}", BM1_CATEGORIES.join("\n"));
+            return Ok(());
+        }
+
         let manifest = read_manifest()?;
         if !&manifest.is_valid() {
             bail!("Invalid manifest");
         }
-        println!("{:#?}", manifest);
         run_commands(&manifest, verbose).context("Failed to run script specified in manifest")?;
         let resource = if let Some(file) = self.file {
             fs::read(file).context("Failed to read specified file")?
@@ -32,6 +64,7 @@ impl Run for Publish {
         } else {
             bail!("No resource to publish specified");
         };
+        publish_bm1(manifest, resource, self.category);
         Ok(())
     }
 }
@@ -87,4 +120,59 @@ fn read_resource(resource_path: &PathBuf, verbose: bool) -> Result<Vec<u8>> {
     } else {
         Ok(fs::read(resource_path)?)
     }
+}
+
+/// Publishes the mod to BeatMods1 (legacy)
+fn publish_bm1(manifest: Manifest, resource: Vec<u8>, category: String) -> Result<()> {
+    println!("Publishing to BeatMods1...");
+
+    let version_string = manifest.version.to_string();
+    let link_string = if let Some(l) = manifest.links.project_home {
+        l.into_string()
+    } else if let Some(l) = manifest.links.project_source {
+        l.into_string()
+    } else {
+        unreachable!();
+    };
+    let description_string = manifest.description.join("\n");
+
+    if !BM1_CATEGORIES.iter().any(|c| c == &category) {
+        bail!("Invalid category");
+    }
+
+    let resource_len = resource.len();
+    let mut resource_name = manifest.id.clone();
+    resource_name.push('.');
+    resource_name.push_str(&version_string);
+    resource_name.push_str(".zip");
+    let file = Part::reader_with_length(Cursor::new(resource), resource_len as u64)
+        .file_name(resource_name)
+        .mime_str("application/zip")
+        .unwrap();
+
+    let mut form = Form::new()
+        .part("file", file)
+        .text("name", manifest.name)
+        .text("version", manifest.version.to_string())
+        .text("gameVersion", manifest.game_version)
+        .text("link", link_string)
+        .text("description", description_string)
+        .text("category", category);
+    if let Some(d) = &manifest.depends_on {
+        let dependencies_string = d
+            .iter()
+            .map(|d| {
+                let mut s = d.0.clone();
+                s.push('@');
+                s.push_str(&d.1.minimum().to_string());
+                s
+            })
+            .collect::<Vec<String>>()
+            .join(",");
+        form = form.text("dependencies", dependencies_string);
+    }
+
+    println!("{:#?}", form);
+
+    Ok(())
 }
