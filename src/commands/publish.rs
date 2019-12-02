@@ -21,7 +21,7 @@ impl Run for Publish {
         println!("{:#?}", manifest);
         run_commands(&manifest).context("Failed to run script specified in manifest")?;
         let resource = if let Some(file) = self.file {
-            fs::read(file).context("Failed to read specified file to publish")?
+            fs::read(file).context("Failed to read specified file")?
         } else if let Some(resource) = &manifest.publish.resource {
             read_resource(resource).context("Failed to read resource specified in manifest")?
         } else {
@@ -58,7 +58,7 @@ fn run_commands(manifest: &Manifest) -> Result<()> {
 
         let o = utils::shell_exec(&command).context("Failed to run command")?;
         if !o.success() {
-            bail!("Command did not exit successfully.");
+            bail!("Command did not exit successfully");
         }
     }
     Ok(())
@@ -69,7 +69,7 @@ fn read_resource(resource_path: &PathBuf) -> Result<Vec<u8>> {
     println!("Getting resource ready...");
 
     if !resource_path.exists() {
-        bail!("Can't find specified resource.");
+        bail!("Can't find specified resource");
     }
 
     if resource_path.is_dir() {
