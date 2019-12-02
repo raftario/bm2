@@ -18,7 +18,7 @@ where
     let options = FileOptions::default().unix_permissions(0o755);
 
     let mut buffer = Vec::new();
-    for entry in WalkDir::new(&path) {
+    for entry in WalkDir::new(&path).min_depth(1) {
         let entry = entry?;
         let entry_path = entry.path();
         let entry_name = entry_path.strip_prefix(&path)?;
