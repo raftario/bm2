@@ -182,29 +182,37 @@ mod tests {
     fn reader_writer() {
         let reader = br#"
         {
-          "$schema": "./Schema.json",
-          "name": "Beat Saber IPA",
-          "id": "beatsaber-ipa-reloaded",
+          "$schema": "https://raw.githubusercontent.com/raftario/BSIPA-MetadataFileSchema/master/Schema.json",
+          "name": "Example Mod",
+          "id": "ExampleMod",
           "description": [
-            "A modified build of IPA for Beat Saber.",
+            "This is an example mod.",
             "",
-            "Multiline description."
+            "It has a multiline description."
           ],
-          "version": "3.12.13",
+          "version": "1.2.3",
           "gameVersion": "0.13.2",
           "author": "DaNike",
           "license": "MIT",
           "dependsOn": {
-            "ScoreSaber": "^1.7.2"
+            "SongCore": "^2.5.1"
           },
           "conflictsWith": {
-            "Song Loader": "^4.3.2"
+            "CameraPlus": "^3.5.7"
           },
+          "loadAfter": ["SongCore"],
+          "loadBefore": ["ScoreSaber"],
           "features": [],
           "links": {
-            "project-source": "https://github.com/beat-saber-modding-group/BeatSaber-IPA-Reloaded",
-            "project-home": "https://github.com/beat-saber-modding-group/BeatSaber-IPA-Reloaded/wiki"
-          }
+            "project-source": "https://github.com/raftario/BSIPA-MetadataFileSchema/blob/master/Schema.json",
+            "project-home": "https://github.com/raftario/BSIPA-MetadataFileSchema/blob/master/Example.json"
+          },
+          "publish": {
+            "script": ["msbuild ExampleMod/ExampleMod.csproj"],
+            "resource": "ExampleMod/bin/"
+          },
+          "readme": "README.md",
+          "icon": "ExampleMod/icon.png"
         }
         "#;
         let deserialised =
@@ -221,29 +229,37 @@ mod tests {
     fn str_string() {
         let str_source = r#"
         {
-          "$schema": "./Schema.json",
-          "name": "Beat Saber IPA",
-          "id": "beatsaber-ipa-reloaded",
+          "$schema": "https://raw.githubusercontent.com/raftario/BSIPA-MetadataFileSchema/master/Schema.json",
+          "name": "Example Mod",
+          "id": "ExampleMod",
           "description": [
-            "A modified build of IPA for Beat Saber.",
+            "This is an example mod.",
             "",
-            "Multiline description."
+            "It has a multiline description."
           ],
-          "version": "3.12.13",
+          "version": "1.2.3",
           "gameVersion": "0.13.2",
           "author": "DaNike",
           "license": "MIT",
           "dependsOn": {
-            "ScoreSaber": "^1.7.2"
+            "SongCore": "^2.5.1"
           },
           "conflictsWith": {
-            "Song Loader": "^4.3.2"
+            "CameraPlus": "^3.5.7"
           },
+          "loadAfter": ["SongCore"],
+          "loadBefore": ["ScoreSaber"],
           "features": [],
           "links": {
-            "project-source": "https://github.com/beat-saber-modding-group/BeatSaber-IPA-Reloaded",
-            "project-home": "https://github.com/beat-saber-modding-group/BeatSaber-IPA-Reloaded/wiki"
-          }
+            "project-source": "https://github.com/raftario/BSIPA-MetadataFileSchema/blob/master/Schema.json",
+            "project-home": "https://github.com/raftario/BSIPA-MetadataFileSchema/blob/master/Example.json"
+          },
+          "publish": {
+            "script": ["msbuild ExampleMod/ExampleMod.csproj"],
+            "resource": "ExampleMod/bin/"
+          },
+          "readme": "README.md",
+          "icon": "ExampleMod/icon.png"
         }
         "#;
         let deserialised = str_source
