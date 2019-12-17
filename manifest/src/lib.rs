@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 use serde_json;
 use std::{
     collections::{HashMap, HashSet},
+    error::Error,
+    fmt::{self, Display, Formatter},
     fs,
     io::{Read, Write},
     path::PathBuf,
@@ -95,15 +97,29 @@ pub struct Manifest {
     pub readme: Option<PathBuf>,
 }
 
-/// Manifest validity
-pub enum Validity {
-    Valid,
+/// Manifest validity error
+#[derive(Debug)]
+pub enum ValidityError {
     InvalidId,
     InvalidName,
     InvalidDescription,
     InvalidLinks,
     InvalidLicense,
 }
+
+impl Display for ValidityError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
+        match self {
+            ValidityError::InvalidId => write!(f, "Invalid manifest ID, it should follow the C# namespace naming convention"),
+            ValidityError::InvalidName => write!(f, "Invalid manifest name, it should not contain tabs or newlines"),
+            ValidityError::InvalidDescription => write!(f, "Invalid manifest description, it should not contain newlines"),
+            ValidityError::InvalidLinks => write!(f, "Invalid manifest links, at least `project-home` or `project-source` should be specified"),
+            ValidityError::InvalidLicense => write!(f, "Invalid manifest license, the license file should exist"),
+        }
+    }
+}
+
+impl Error for ValidityError {}
 
 impl Manifest {
     /// Reads the manifest from a JSON reader
@@ -122,30 +138,30 @@ impl Manifest {
     }
 
     /// Validates the manifest against its schema's regexps
-    pub fn validity(&self) -> Validity {
+    pub fn validate(&self) -> Result<(), ValidityError> {
         if !ID_REGEX.is_match(&self.id) {
-            return Validity::InvalidId;
+            return Err(ValidityError::InvalidId);
         }
         if !NAME_REGEX.is_match(&self.name) {
-            return Validity::InvalidName;
+            return Err(ValidityError::InvalidName);
         }
         if !&self
             .description
             .iter()
             .all(|l| DESCRIPTION_REGEX.is_match(l))
         {
-            return Validity::InvalidDescription;
+            return Err(ValidityError::InvalidDescription);
         }
         if self.links.project_home.is_none() && self.links.project_source.is_none() {
-            return Validity::InvalidLinks;
+            return Err(ValidityError::InvalidLinks);
         }
-        if self.license.starts_with("FILE ") {
-            let license_file = self.license.replace("FILE ", "");
+        if self.license.starts_with("SEE LICENSE IN ") {
+            let license_file = self.license.replace("SEE LICENSE IN ", "");
             if fs::metadata(license_file).is_err() {
-                return Validity::InvalidLicense;
+                return Err(ValidityError::InvalidLicense);
             }
         }
-        Validity::Valid
+        Ok(())
     }
 }
 

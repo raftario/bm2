@@ -1,6 +1,6 @@
 use crate::{commands::Run, utils};
 use anyhow::{bail, Context, Result};
-use manifest::{Manifest, Validity};
+use manifest::Manifest;
 use reqwest::{
     multipart::{Form, Part},
     ClientBuilder, StatusCode,
@@ -60,14 +60,7 @@ impl Run for Publish {
         }
 
         let manifest = read_manifest()?;
-        match manifest.validity() {
-            Validity::Valid => (),
-            Validity::InvalidId => bail!("Invalid manifest `id`"),
-            Validity::InvalidName => bail!("Invalid manifest `name`"),
-            Validity::InvalidDescription => bail!("Invalid manifest `description`"),
-            Validity::InvalidLinks => bail!("Invalid manifest `links`, make sure either `project-home` or `project-source is provided`"),
-            Validity::InvalidLicense => bail!("Invalid manifest `license`, specified file must exist"),
-        }
+        manifest.validate()?;
         run_commands(&manifest, verbose).context("Failed to run script specified in manifest")?;
         let resource = if let Some(file) = self.file {
             fs::read(file).context("Failed to read specified file")?
