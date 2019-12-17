@@ -269,4 +269,84 @@ mod tests {
         let serialised = deserialised.to_string().expect("Can't serialise manifest");
         println!("{}", serialised);
     }
+
+    #[test]
+    fn validation() {
+        let valid_source = r#"
+        {
+          "$schema": "https://raw.githubusercontent.com/raftario/BSIPA-MetadataFileSchema/master/Schema.json",
+          "name": "Example Mod",
+          "id": "ExampleMod",
+          "description": [
+            "This is an example mod.",
+            "",
+            "It has a multiline description."
+          ],
+          "version": "1.2.3",
+          "gameVersion": "0.13.2",
+          "author": "DaNike",
+          "license": "MIT",
+          "dependsOn": {
+            "SongCore": "^2.5.1"
+          },
+          "conflictsWith": {
+            "CameraPlus": "^3.5.7"
+          },
+          "loadAfter": ["SongCore"],
+          "loadBefore": ["ScoreSaber"],
+          "features": [],
+          "links": {
+            "project-source": "https://github.com/raftario/BSIPA-MetadataFileSchema/blob/master/Schema.json",
+            "project-home": "https://github.com/raftario/BSIPA-MetadataFileSchema/blob/master/Example.json"
+          },
+          "publish": {
+            "script": ["msbuild ExampleMod/ExampleMod.csproj"],
+            "resource": "ExampleMod/bin/"
+          },
+          "readme": "README.md",
+          "icon": "ExampleMod/icon.png"
+        }
+        "#;
+        let valid_deserialised = valid_source
+            .parse::<Manifest>()
+            .expect("Can't deserialise manifest");
+        assert!(valid_deserialised.validate().is_ok());
+
+        let invalid_source = r#"
+        {
+          "$schema": "https://raw.githubusercontent.com/raftario/BSIPA-MetadataFileSchema/master/Schema.json",
+          "name": "Example Mod\n",
+          "id": "example-mod",
+          "description": [
+            "This is an example mod.",
+            "\n",
+            "It has a multiline description."
+          ],
+          "version": "1.2.3",
+          "gameVersion": "0.13.2",
+          "author": "DaNike",
+          "license": "SEE LICENSE IN LICENSE.txt",
+          "dependsOn": {
+            "SongCore": "^2.5.1"
+          },
+          "conflictsWith": {
+            "CameraPlus": "^3.5.7"
+          },
+          "loadAfter": ["SongCore"],
+          "loadBefore": ["ScoreSaber"],
+          "features": [],
+          "links": {},
+          "publish": {
+            "script": ["msbuild ExampleMod/ExampleMod.csproj"],
+            "resource": "ExampleMod/bin/"
+          },
+          "readme": "README.md",
+          "icon": "ExampleMod/icon.png"
+        }
+        "#;
+        let invalid_deserialised = invalid_source
+            .parse::<Manifest>()
+            .expect("Can't deserialise manifest");
+        assert!(invalid_deserialised.validate().is_err());
+    }
 }
