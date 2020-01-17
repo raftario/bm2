@@ -6,37 +6,37 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
+        include:
+          - os: windows-lates
+            path: target/release/bm2.exe
     steps:
-    - uses: actions/checkout@v1
-      with:
-        fetch-depth: 1
-    - uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
-    - name: Build project
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        args: --release
-    - name: Strip binary (*nix)
-      if: matrix.os != 'windows-latest'
-      run: strip target/release/bm2
-    - name: Archive binary (Linux)
-      if: matrix.os == 'ubuntu-latest'
-      uses: actions/upload-artifact@v1
-      with:
-        name: Linux
-        path: target/release/bm2
-    - name: Archive binary (Windows)
-      if: matrix.os == 'windows-latest'
-      uses: actions/upload-artifact@v1
-      with:
-        name: Windows
-        path: target/release/bm2.exe
-    - name: Archive binary (macOS)
-      if: matrix.os == 'macOS-latest'
-      uses: actions/upload-artifact@v1
-      with:
-        name: macOS
-        path: target/release/bm2
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v1
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/cache@v1
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/cache@v1
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+      - name: Build project
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+      - name: Strip binary
+        if: runner.os != 'Windows'
+        run: strip target/release/bm2
+      - name: Upload binary
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ runner.os }}
+          path: ${{ matrix.path || target/release/bm2 }}
