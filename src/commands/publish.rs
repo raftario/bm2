@@ -1,9 +1,14 @@
 use crate::{commands::Run, utils};
 use anyhow::{bail, Context, Result};
+use dialoguer::{Input, PasswordInput};
+use indicatif::ProgressBar;
 use manifest::Manifest;
 use reqwest::{
-    multipart::{Form, Part},
-    ClientBuilder, StatusCode,
+    blocking::{
+        multipart::{Form, Part},
+        ClientBuilder,
+    },
+    StatusCode,
 };
 use std::{
     fs::{self, File},
@@ -45,11 +50,11 @@ pub struct Publish {
 
     /// BeatMods1 user (legacy)
     #[structopt(short, long, name = "USER")]
-    user: String,
+    user: Option<String>,
 
     /// BeatMods1 password (legacy)
     #[structopt(short, long, name = "PASSWORD")]
-    password: String,
+    password: Option<String>,
 }
 
 impl Run for Publish {
@@ -70,14 +75,25 @@ impl Run for Publish {
         } else {
             bail!("No resource to publish specified");
         };
-        publish_bm1(manifest, resource, self.category, self.user, self.password)?;
+
+        let user = self
+            .user
+            .unwrap_or(Input::new().with_prompt("BeatMods1 username").interact()?);
+        let password = self.password.unwrap_or(
+            PasswordInput::new()
+                .with_prompt("BeatMods1 password")
+                .interact()?,
+        );
+        publish_bm1(manifest, resource, self.category, user, password)?;
         Ok(())
     }
 }
 
 /// Reads and parses the `manifest.json` file
 fn read_manifest() -> Result<Manifest> {
-    println!("Reading manifest...");
+    let p = ProgressBar::new_spinner();
+    p.set_message("Reading manifest...");
+    p.enable_steady_tick(100);
 
     let manifest_path = PathBuf::from("manifest.json");
     if !manifest_path.exists() {
@@ -85,18 +101,22 @@ fn read_manifest() -> Result<Manifest> {
     }
 
     let manifest_file = File::open(manifest_path).context("Failed to read manifest file")?;
-    Ok(Manifest::from_reader(&manifest_file).context("Invalid manifest file")?)
+    let result = Manifest::from_reader(&manifest_file).context("Invalid manifest file")?;
+    p.finish();
+    Ok(result)
 }
 
 /// Runs the publish script commands from the manifest
 fn run_commands(manifest: &Manifest, verbose: bool) -> Result<()> {
-    print!("Running commands... ");
+    let p = ProgressBar::new_spinner();
+    p.set_message("Running commands...");
+    p.enable_steady_tick(100);
 
     let script = &manifest.publish.script;
     if script.is_empty() {
-        print!("No commands.");
+        p.finish_with_message("No commands to run.");
+        return Ok(());
     };
-    println!();
     for command in script {
         println!("$ {}", &command);
 
@@ -105,27 +125,32 @@ fn run_commands(manifest: &Manifest, verbose: bool) -> Result<()> {
             bail!("Command did not exit successfully");
         }
     }
+    p.finish();
     Ok(())
 }
 
 /// Obtains a byte buffer containing the resource to upload to BeatMods2
 fn read_resource(resource_path: &PathBuf, verbose: bool) -> Result<Vec<u8>> {
-    println!("Getting resource ready...");
+    let p = ProgressBar::new_spinner();
+    p.set_message("Getting resource ready...");
+    p.enable_steady_tick(100);
 
     if !resource_path.exists() {
         bail!("Can't find specified resource");
     }
 
-    if resource_path.is_dir() {
-        println!("Resource is a directory. Zipping...");
+    let result = if resource_path.is_dir() {
+        p.set_message("Resource is a directory. Zipping...");
 
         let buffer = Cursor::new(Vec::new());
-        Ok(utils::zip_dir(resource_path, buffer, verbose)
+        utils::zip_dir(resource_path, buffer, verbose)
             .context("Failed to zip directory")?
-            .into_inner())
+            .into_inner()
     } else {
-        Ok(fs::read(resource_path)?)
-    }
+        fs::read(resource_path)?
+    };
+    p.finish();
+    Ok(result)
 }
 
 /// Publishes the mod to BeatMods1 (legacy)
@@ -136,7 +161,9 @@ fn publish_bm1(
     user: String,
     password: String,
 ) -> Result<()> {
-    println!("Publishing to BeatMods1...");
+    let p = ProgressBar::new_spinner();
+    p.set_message("Publishing to BeatMods1...");
+    p.enable_steady_tick(100);
 
     let version_string = manifest.version.to_string();
     let link_string = if let Some(l) = manifest.links.project_home {
@@ -152,15 +179,13 @@ fn publish_bm1(
         bail!("Invalid category");
     }
 
-    let resource_len = resource.len();
     let mut resource_name = manifest.id.clone();
     resource_name.push('.');
     resource_name.push_str(&version_string);
     resource_name.push_str(".zip");
-    let file = Part::reader_with_length(Cursor::new(resource), resource_len as u64)
+    let file = Part::bytes(resource)
         .file_name(resource_name)
-        .mime_str("application/zip")
-        .unwrap();
+        .mime_str("application/zip")?;
 
     let mut form = Form::new()
         .part("file", file)
@@ -197,7 +222,7 @@ fn publish_bm1(
         .context("Invalid credentials")?
         .to_str()?;
 
-    let mut response = client
+    let response = client
         .post("https://beatmods.com/api/v1/mod/create/")
         .multipart(form)
         .bearer_auth(token)
@@ -207,5 +232,6 @@ fn publish_bm1(
         bail!("Publishing failed: {}", response.text()?);
     }
 
+    p.finish();
     Ok(())
 }

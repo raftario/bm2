@@ -10,12 +10,14 @@ license = "MIT"
 description = "CLI for the Beat Saber mod repository BeatMods2"
 
 [dependencies]
-anyhow = "1.0.25"
+anyhow = "1.0.26"
+dialoguer = "0.5.0"
+indicatif = "0.13.0"
 manifest = { path = "./manifest" }
-reqwest = "0.9.22"
-structopt = "0.3.5"
-walkdir = "2.2.9"
-zip = { version = "0.5.3", default-features = false, features = ["deflate", "time"] }
+reqwest = { version = "0.10.1", features = ["blocking", "cookies"] }
+structopt = "0.3.7"
+walkdir = "2.3.1"
+zip = { version = "0.5.4", default-features = false, features = ["deflate", "time"] }
 
 [features]
 nightly = []
