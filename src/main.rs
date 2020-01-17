@@ -11,6 +11,7 @@ mod utils;
 
 use crate::commands::{Command, Run};
 use anyhow::Result;
+use std::env;
 use structopt::StructOpt;
 
 /// CLI for the Beat Saber mod repository BeatMods2
@@ -25,7 +26,11 @@ struct Opt {
 }
 
 fn main() -> Result<()> {
+    if env::args().any(|a| &a == "finish_update") {
+        return updater::finish_update();
+    }
     updater::update()?;
+
     let opt = Opt::from_args();
     opt.cmd.run(opt.verbose)?;
     Ok(())

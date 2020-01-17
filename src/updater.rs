@@ -1,6 +1,7 @@
 use crate::globals::USER_AGENT;
 use anyhow::{Context, Result};
 use cfg_if::cfg_if;
+use console::Term;
 use dialoguer::Confirmation;
 use indicatif::ProgressBar;
 use lazy_static::lazy_static;
@@ -11,6 +12,9 @@ use std::{
     convert::{TryFrom, TryInto},
     env, fs,
     io::{Cursor, Read},
+    process::{self, Command},
+    thread,
+    time::Duration,
 };
 use zip::ZipArchive;
 
@@ -59,6 +63,7 @@ struct ReleaseAsset {
     browser_download_url: String,
 }
 
+/// Check for updates and installs them
 pub fn update() -> Result<()> {
     let p = ProgressBar::new_spinner();
     p.set_message("Checking for updates");
@@ -88,18 +93,23 @@ pub fn update() -> Result<()> {
         .unwrap()
         .browser_download_url;
 
-    if !Confirmation::new()
+    p.finish_and_clear();
+    let term = Term::stderr();
+    let install = Confirmation::new()
         .with_text(&format!(
             "A new version is available, do you want to update? (current: {}, new: {})",
             &*VERSION, new_version
         ))
-        .interact()?
-    {
-        p.finish_and_clear();
+        .interact_on(&term)?;
+    term.clear_last_lines(1)?;
+    drop(term);
+    if !install {
         return Ok(());
     }
 
+    let p = ProgressBar::new_spinner();
     p.set_message("Downloading new update");
+    p.enable_steady_tick(100);
     let mut dl = client.get(url).send()?;
 
     p.set_message("Installing new update");
@@ -118,16 +128,43 @@ pub fn update() -> Result<()> {
     zipfile.read_to_end(&mut file)?;
 
     let current_exe = env::current_exe()?;
-    fs::rename(
-        &current_exe,
-        format!(
-            "{}.old",
-            current_exe
-                .to_str()
-                .context("Invalid current executable path")?
-        ),
-    )?;
-    fs::write(&current_exe, file)?;
+    cfg_if! {
+        if #[cfg(windows)] {
+            let old_exe = format!("{}.old.exe", current_exe.display());
+            let new_exe = format!("{}.new.exe", current_exe.display());
+        } else {
+            let old_exe = format!("{}.old", current_exe.display());
+            let new_exe = format!("{}.new", current_exe.display());
+        }
+    }
+    fs::copy(&current_exe, &old_exe)?;
+    fs::write(&new_exe, file)?;
+
+    p.finish_and_clear();
+    Command::new(old_exe).arg("finish_update").spawn()?;
+    thread::sleep(Duration::from_millis(250));
+    process::exit(0);
+}
+// This is required cause Windows doesn't let you move an executable if it's running
+pub fn finish_update() -> Result<()> {
+    let p = ProgressBar::new_spinner();
+    p.set_message("Finalizing");
+    p.enable_steady_tick(100);
+
+    thread::sleep(Duration::from_millis(500));
+    let current_exe = env::current_exe()?;
+    let current_exe = current_exe.to_str().context("Invalid current exe path")?;
+    cfg_if! {
+        if #[cfg(windows)] {
+            let old_exe = &current_exe[..(current_exe.len() - 8)];
+            let new_exe = format!("{}.new.exe", old_exe);
+        } else {
+            let old_exe = &current_exe[..(current_exe.len() - 4)];
+            let new_exe = format!("{}.new", old_exe);
+        }
+    }
+    fs::remove_file(old_exe)?;
+    fs::rename(new_exe, old_exe)?;
 
     p.finish_and_clear();
     Ok(())
