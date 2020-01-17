@@ -174,6 +174,65 @@ impl FromStr for Manifest {
     }
 }
 
+/// Old BSIPA manifest
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct OldManifest {
+    pub id: String,
+    pub name: String,
+    pub version: Version,
+    pub game_version: String,
+    pub description: Vec<String>,
+    pub author: String,
+    pub depends_on: Option<HashMap<String, VersionReq>>,
+    pub conflicts_with: Option<HashMap<String, VersionReq>>,
+    pub load_after: Option<HashSet<String>>,
+    pub load_before: Option<HashSet<String>>,
+    pub features: Option<HashSet<String>>,
+    pub icon: Option<PathBuf>,
+    pub links: Links,
+}
+
+impl OldManifest {
+    /// Reads the manifest from a JSON reader
+    pub fn from_reader<R: Read>(reader: R) -> serde_json::Result<Self> {
+        serde_json::from_reader(reader)
+    }
+}
+
+/// Parses the manifest from a JSON string
+impl FromStr for OldManifest {
+    type Err = serde_json::Error;
+
+    fn from_str(s: &str) -> serde_json::Result<OldManifest> {
+        serde_json::from_str(s)
+    }
+}
+
+/// Migrate the old manifest to a new one
+impl From<OldManifest> for Manifest {
+    fn from(m: OldManifest) -> Self {
+        Self {
+            id: m.id,
+            name: m.name,
+            version: m.version,
+            game_version: m.game_version,
+            description: m.description,
+            author: m.author,
+            license: "MIT".to_owned(),
+            depends_on: m.depends_on,
+            conflicts_with: m.conflicts_with,
+            load_after: m.load_after,
+            load_before: m.load_before,
+            features: m.features,
+            icon: m.icon,
+            links: m.links,
+            publish: Publish::default(),
+            readme: None,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::Manifest;
