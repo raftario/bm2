@@ -39,4 +39,4 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: ${{ runner.os }}
-          path: ${{ matrix.path || target/release/bm2 }}
+          path: ${{ matrix.path || 'target/release/bm2' }}
