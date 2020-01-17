@@ -92,7 +92,7 @@ impl Run for Publish {
 /// Reads and parses the `manifest.json` file
 fn read_manifest() -> Result<Manifest> {
     let p = ProgressBar::new_spinner();
-    p.set_message("Reading manifest...");
+    p.set_message("Reading manifest");
     p.enable_steady_tick(100);
 
     let manifest_path = PathBuf::from("manifest.json");
@@ -109,12 +109,12 @@ fn read_manifest() -> Result<Manifest> {
 /// Runs the publish script commands from the manifest
 fn run_commands(manifest: &Manifest, verbose: bool) -> Result<()> {
     let p = ProgressBar::new_spinner();
-    p.set_message("Running commands...");
+    p.set_message("Running commands");
     p.enable_steady_tick(100);
 
     let script = &manifest.publish.script;
     if script.is_empty() {
-        p.finish_with_message("No commands to run.");
+        p.finish_with_message("No commands to run");
         return Ok(());
     };
     for command in script {
@@ -132,7 +132,7 @@ fn run_commands(manifest: &Manifest, verbose: bool) -> Result<()> {
 /// Obtains a byte buffer containing the resource to upload to BeatMods2
 fn read_resource(resource_path: &PathBuf, verbose: bool) -> Result<Vec<u8>> {
     let p = ProgressBar::new_spinner();
-    p.set_message("Getting resource ready...");
+    p.set_message("Getting resource ready");
     p.enable_steady_tick(100);
 
     if !resource_path.exists() {
@@ -140,7 +140,7 @@ fn read_resource(resource_path: &PathBuf, verbose: bool) -> Result<Vec<u8>> {
     }
 
     let result = if resource_path.is_dir() {
-        p.set_message("Resource is a directory. Zipping...");
+        p.set_message("Resource is a directory, zipping");
 
         let buffer = Cursor::new(Vec::new());
         utils::zip_dir(resource_path, buffer, verbose)
@@ -162,7 +162,7 @@ fn publish_bm1(
     password: String,
 ) -> Result<()> {
     let p = ProgressBar::new_spinner();
-    p.set_message("Publishing to BeatMods1...");
+    p.set_message("Publishing to BeatMods1");
     p.enable_steady_tick(100);
 
     let version_string = manifest.version.to_string();

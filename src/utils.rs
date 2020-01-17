@@ -1,4 +1,5 @@
 use anyhow::Result;
+use cfg_if::cfg_if;
 use std::{
     fs::File,
     io::{self, Read, Seek, Write},
@@ -48,11 +49,13 @@ where
 
 /// Runs a command using the OS specific shell and current working directory
 pub fn shell_exec(command_str: &str, output: bool) -> io::Result<ExitStatus> {
-    let (shell, flag) = if cfg!(target_os = "windows") {
-        ("cmd", "/C")
-    } else {
-        ("sh", "-c")
-    };
+    cfg_if! {
+        if #[cfg(target_os = "windows")] {
+            let (shell, flag) = ("cmd", "/C");
+        } else {
+            let (shell, flag) = ("sh", "-c");
+        }
+    }
     let mut cmd = Command::new(shell);
     cmd.arg(flag);
     cmd.arg(&command_str);

@@ -15,10 +15,10 @@ use std::{
 use url::Url;
 
 lazy_static! {
-    pub static ref ID_REGEX: Regex =
+    static ref ID_REGEX: Regex =
         Regex::new(r#"^([A-Z][0-9a-z]*)+(\.([A-Z][0-9a-z]*)+)*$"#).unwrap();
-    pub static ref NAME_REGEX: Regex = Regex::new(r#"^[^\n\r\t]+$"#).unwrap();
-    pub static ref DESCRIPTION_REGEX: Regex = Regex::new(r#"^[^\n\r]*$"#).unwrap();
+    static ref NAME_REGEX: Regex = Regex::new(r#"^[^\n\r\t]+$"#).unwrap();
+    static ref DESCRIPTION_REGEX: Regex = Regex::new(r#"^[^\n\r]*$"#).unwrap();
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, PartialEq, Eq)]
