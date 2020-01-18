@@ -15,10 +15,10 @@ use std::{
 use url::Url;
 
 lazy_static! {
-    static ref ID_REGEX: Regex =
+    pub static ref ID_REGEX: Regex =
         Regex::new(r#"^([A-Z][0-9a-z]*)+(\.([A-Z][0-9a-z]*)+)*$"#).unwrap();
-    static ref NAME_REGEX: Regex = Regex::new(r#"^[^\n\r\t]+$"#).unwrap();
-    static ref DESCRIPTION_REGEX: Regex = Regex::new(r#"^[^\n\r]*$"#).unwrap();
+    pub static ref NAME_REGEX: Regex = Regex::new(r#"^[^\n\r\t]+$"#).unwrap();
+    pub static ref DESCRIPTION_REGEX: Regex = Regex::new(r#"^[^\n\r]*$"#).unwrap();
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, PartialEq, Eq)]
@@ -48,11 +48,20 @@ pub struct Publish {
 fn is_default<T: Default + PartialEq>(arg: &T) -> bool {
     arg == &Default::default()
 }
+pub const SCHEMA: &str =
+    "https://raw.githubusercontent.com/raftario/BSIPA-MetadataFileSchema/master/Schema.json";
+fn schema() -> String {
+    SCHEMA.to_owned()
+}
 
 /// BeatMods2 Manifest (see https://github.com/raftario/BSIPA-MetadataFileSchema)
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Manifest {
+    #[serde(default = "schema")]
+    #[serde(rename = "$schema")]
+    pub schema: String,
+
     pub id: String,
 
     pub name: String,
@@ -214,6 +223,7 @@ impl From<(OldManifest, String)> for Manifest {
     fn from(m: (OldManifest, String)) -> Self {
         let (m, license) = m;
         Self {
+            schema: schema(),
             id: m.id,
             name: m.name,
             version: m.version,

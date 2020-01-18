@@ -1,8 +1,9 @@
 mod config;
+mod init;
 mod migrate;
 mod publish;
 
-use crate::commands::{config::Config, migrate::Migrate, publish::Publish};
+use crate::commands::{config::Config, init::Init, migrate::Migrate, publish::Publish};
 use anyhow::Result;
 use structopt::StructOpt;
 
@@ -37,6 +38,7 @@ macro_rules! create_command {
 
 create_command!(
     Config: "Edits the application config",
+    Init: "Initialises a new manifest",
     Migrate: "Migrates a manifest from the old to the new format",
     Publish: "Publishes this mod to BeatMods",
 );
