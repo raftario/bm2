@@ -18,6 +18,7 @@ use structopt::StructOpt;
 
 /// CLI for the Beat Saber mod repository BeatMods2
 #[derive(StructOpt, Debug)]
+#[structopt(author)]
 struct Opt {
     /// Prints more information
     #[structopt(short, long)]
