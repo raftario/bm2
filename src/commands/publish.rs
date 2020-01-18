@@ -42,7 +42,7 @@ static BM1_CATEGORIES: &[&str] = &[
 pub struct Publish {
     /// File to publish
     #[structopt(name = "FILE")]
-    file: Option<String>,
+    file: Option<PathBuf>,
 
     /// BeatMods1 category (legacy)
     #[structopt(short, long, name = "CATEGORY", default_value = "Other")]

@@ -210,8 +210,9 @@ impl FromStr for OldManifest {
 }
 
 /// Migrate the old manifest to a new one
-impl From<OldManifest> for Manifest {
-    fn from(m: OldManifest) -> Self {
+impl From<(OldManifest, String)> for Manifest {
+    fn from(m: (OldManifest, String)) -> Self {
+        let (m, license) = m;
         Self {
             id: m.id,
             name: m.name,
@@ -219,7 +220,7 @@ impl From<OldManifest> for Manifest {
             game_version: m.game_version,
             description: m.description,
             author: m.author,
-            license: "MIT".to_owned(),
+            license,
             depends_on: m.depends_on,
             conflicts_with: m.conflicts_with,
             load_after: m.load_after,

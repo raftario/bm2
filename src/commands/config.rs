@@ -3,7 +3,7 @@ use crate::{
     config::Config as AppConfig,
     globals::{CONFIG_PATH, TERM_OUT},
 };
-use anyhow::Result;
+use anyhow::{Context, Result};
 use cfg_if::cfg_if;
 use dialoguer::Editor;
 use indicatif::ProgressBar;
@@ -41,7 +41,7 @@ impl Run for Config {
 
         let config = serde_json::to_string_pretty(&AppConfig::read()?)?;
         if let Some(s) = Editor::new().extension(".json").edit(&config)? {
-            let config: AppConfig = serde_json::from_str(&s)?;
+            let config: AppConfig = serde_json::from_str(&s).context("Invalid config file")?;
             config.write()?;
 
             p.finish_with_message("Changes saved");
