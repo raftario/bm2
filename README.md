@@ -21,7 +21,11 @@ Just run `bm2 --help` to get started.
 
 ### Available commands
 
-* `publish` - Publishes to BeatMods
+* `config` - Edits the application config
+* `init` - Initialises a new manifest
+* `migrate` - Migrates a manifest from the old to the new format
+* `publish` - Publishes this mod to BeatMods
+* `update` - Checks for updates and install them
 
 ## Installation
 
