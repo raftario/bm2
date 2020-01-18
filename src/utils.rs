@@ -1,3 +1,4 @@
+use crate::globals::TERM_ERR;
 use anyhow::Result;
 use cfg_if::cfg_if;
 use std::{
@@ -31,7 +32,7 @@ where
             zip.write_all(&*buffer)?;
 
             if verbose {
-                println!("Added file {}", entry_path.display());
+                TERM_ERR.write_line(&format!("Added file {}", entry_path.display()))?;
             }
 
             buffer.clear();
@@ -39,7 +40,7 @@ where
             zip.add_directory_from_path(entry_name, options)?;
 
             if verbose {
-                println!("Added file {}", entry_path.display());
+                TERM_ERR.write_line(&format!("Added file {}", entry_path.display()))?;
             }
         }
     }

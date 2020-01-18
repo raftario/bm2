@@ -1,7 +1,6 @@
-use crate::globals::USER_AGENT;
+use crate::globals::{TERM_ERR, USER_AGENT};
 use anyhow::{Context, Result};
 use cfg_if::cfg_if;
-use console::Term;
 use dialoguer::Confirmation;
 use indicatif::ProgressBar;
 use lazy_static::lazy_static;
@@ -94,15 +93,13 @@ pub fn update() -> Result<()> {
         .browser_download_url;
 
     p.finish_and_clear();
-    let term = Term::stderr();
     let install = Confirmation::new()
         .with_text(&format!(
             "A new version is available, do you want to update? (current: {}, new: {})",
             &*VERSION, new_version
         ))
-        .interact_on(&term)?;
-    term.clear_last_lines(1)?;
-    drop(term);
+        .interact_on(&*TERM_ERR)?;
+    TERM_ERR.clear_last_lines(1)?;
     if !install {
         return Ok(());
     }

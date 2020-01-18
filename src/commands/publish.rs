@@ -1,4 +1,8 @@
-use crate::{commands::Run, utils};
+use crate::{
+    commands::Run,
+    globals::{TERM_ERR, TERM_OUT},
+    utils,
+};
 use anyhow::{bail, Context, Result};
 use dialoguer::{Input, PasswordInput};
 use indicatif::ProgressBar;
@@ -60,7 +64,7 @@ pub struct Publish {
 impl Run for Publish {
     fn run(self, verbose: bool) -> Result<()> {
         if self.list_categories {
-            println!("{}", BM1_CATEGORIES.join("\n"));
+            TERM_OUT.write_line(&BM1_CATEGORIES.join("\n"))?;
             return Ok(());
         }
 
@@ -76,13 +80,15 @@ impl Run for Publish {
             bail!("No resource to publish specified");
         };
 
-        let user = self
-            .user
-            .unwrap_or(Input::new().with_prompt("BeatMods1 username").interact()?);
+        let user = self.user.unwrap_or(
+            Input::new()
+                .with_prompt("BeatMods1 username")
+                .interact_on(&*TERM_ERR)?,
+        );
         let password = self.password.unwrap_or(
             PasswordInput::new()
                 .with_prompt("BeatMods1 password")
-                .interact()?,
+                .interact_on(&*TERM_ERR)?,
         );
         publish_bm1(manifest, resource, self.category, user, password)?;
         Ok(())
@@ -118,7 +124,7 @@ fn run_commands(manifest: &Manifest, verbose: bool) -> Result<()> {
         return Ok(());
     };
     for command in script {
-        println!("$ {}", &command);
+        TERM_ERR.write_line(&(format!("$ {}", &command)))?;
 
         let o = utils::shell_exec(&command, verbose).context("Failed to run command")?;
         if !o.success() {

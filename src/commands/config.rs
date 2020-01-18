@@ -1,4 +1,8 @@
-use crate::{commands::Run, config::Config as AppConfig, globals::CONFIG_PATH};
+use crate::{
+    commands::Run,
+    config::Config as AppConfig,
+    globals::{CONFIG_PATH, TERM_OUT},
+};
 use anyhow::Result;
 use cfg_if::cfg_if;
 use dialoguer::Editor;
@@ -19,13 +23,13 @@ pub struct Config {
 impl Run for Config {
     fn run(self, _verbose: bool) -> Result<()> {
         if self.print_path {
-            println!("{}", CONFIG_PATH.display());
+            TERM_OUT.write_line(&format!("{}", CONFIG_PATH.display()))?;
             return Ok(());
         }
         cfg_if! {
             if #[cfg(windows)] {
                 if env::var_os("EDITOR").is_none() && env::var_os("VISUAL").is_none() {
-                    println!("{}", CONFIG_PATH.display());
+                    TERM_OUT.write_line(&format!("{}", CONFIG_PATH.display()))?;
                     return Ok(());
                 }
             }
