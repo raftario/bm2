@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "bm2 config",
+  "description": "bm2 command line utility configuration file",
+  "type": "object",
+  "properties": {
+    "autoUpdate": {
+      "title": "Auto update",
+      "description": "Enable automatic updates",
+      "type": "boolean"
+    },
+    "defaults": {
+      "title": "Defaults",
+      "description": "Default values for manifest initialisation",
+      "type": "object",
+      "properties": {
+        "author": {
+          "title": "Author",
+          "type": "string"
+        },
+        "license": {
+          "title": "License",
+          "type": "string"
+        }
+      }
+    },
+    "credentials": {
+      "title": "Credentials",
+      "description": "BeatMods1 credentials (legacy)",
+      "type": "object",
+      "properties": {
+        "username": {
+          "title": "Username",
+          "type": "string"
+        },
+        "password": {
+          "title": "Password",
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": [
+    "autoUpdate"
+  ]
+}

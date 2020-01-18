@@ -1,6 +1,7 @@
+mod config;
 mod publish;
 
-use crate::commands::publish::Publish;
+use crate::commands::{config::Config, publish::Publish};
 use anyhow::Result;
 use structopt::StructOpt;
 
@@ -35,4 +36,5 @@ macro_rules! create_command {
 
 create_command!(
     Publish: "Publishes this mod to BeatMods",
+    Config: "Edit the application config",
 );

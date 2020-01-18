@@ -2,8 +2,10 @@
 
 /// CLI subcommands
 mod commands;
+/// Application configuration
+mod config;
 /// Global constants and static variables
-pub mod globals;
+mod globals;
 /// Auto updater
 mod updater;
 /// Various utilities and helpers
@@ -29,7 +31,9 @@ fn main() -> Result<()> {
     if env::args().any(|a| &a == "finish_update") {
         return updater::finish_update();
     }
-    updater::update()?;
+    if config::Config::read()?.auto_update {
+        updater::update()?;
+    }
 
     let opt = Opt::from_args();
     opt.cmd.run(opt.verbose)?;

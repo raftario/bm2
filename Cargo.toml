@@ -10,18 +10,20 @@ license = "MIT"
 description = "CLI for the Beat Saber mod repository BeatMods2"
 
 [dependencies]
-anyhow = "1.0.26"
+anyhow = "1.0"
 cfg-if = "0.1.10"
 console = "0.9.1"
 dialoguer = "0.5.0"
+dirs = "2.0"
 indicatif = "0.13.0"
-lazy_static = "1.4.0"
+lazy_static = "1.4"
 manifest = { path = "./manifest" }
 reqwest = { version = "0.10.1", features = ["blocking", "cookies", "json"] }
 semver = { git = "https://github.com/raftario/semver_rs", branch = "minmax" }
-serde = { version = "1.0.104", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 structopt = "0.3.7"
-walkdir = "2.3.1"
+walkdir = "2.3"
 zip = { version = "0.5.4", default-features = false, features = ["deflate", "time"] }
 
 [features]
