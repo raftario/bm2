@@ -7,7 +7,6 @@ use std::{
     collections::{HashMap, HashSet},
     error::Error,
     fmt::{self, Display, Formatter},
-    fs,
     io::{Read, Write},
     path::PathBuf,
     str::FromStr,
@@ -112,18 +111,23 @@ pub enum ValidityError {
     InvalidId,
     InvalidName,
     InvalidDescription,
-    InvalidLinks,
-    InvalidLicense,
 }
 
 impl Display for ValidityError {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
-            ValidityError::InvalidId => write!(f, "Invalid manifest ID, it should follow the C# namespace naming convention"),
-            ValidityError::InvalidName => write!(f, "Invalid manifest name, it should not contain tabs or newlines"),
-            ValidityError::InvalidDescription => write!(f, "Invalid manifest description, it should not contain newlines"),
-            ValidityError::InvalidLinks => write!(f, "Invalid manifest links, at least `project-home` or `project-source` should be specified"),
-            ValidityError::InvalidLicense => write!(f, "Invalid manifest license, the license file should exist"),
+            ValidityError::InvalidId => write!(
+                f,
+                "Invalid manifest ID, it should follow the C# namespace naming convention"
+            ),
+            ValidityError::InvalidName => write!(
+                f,
+                "Invalid manifest name, it should not contain tabs or newlines"
+            ),
+            ValidityError::InvalidDescription => write!(
+                f,
+                "Invalid manifest description, it should not contain newlines"
+            ),
         }
     }
 }
@@ -161,15 +165,6 @@ impl Manifest {
         {
             return Err(ValidityError::InvalidDescription);
         }
-        if self.links.project_home.is_none() && self.links.project_source.is_none() {
-            return Err(ValidityError::InvalidLinks);
-        }
-        if self.license.starts_with("SEE LICENSE IN ") {
-            let license_file = self.license.replace("SEE LICENSE IN ", "");
-            if fs::metadata(license_file).is_err() {
-                return Err(ValidityError::InvalidLicense);
-            }
-        }
         Ok(())
     }
 }
@@ -199,6 +194,7 @@ pub struct OldManifest {
     pub load_before: Option<HashSet<String>>,
     pub features: Option<HashSet<String>>,
     pub icon: Option<PathBuf>,
+    #[serde(default)]
     pub links: Links,
 }
 

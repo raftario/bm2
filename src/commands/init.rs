@@ -1,8 +1,7 @@
-use crate::{commands::Run, config::Config, globals::TERM_ERR};
+use crate::{commands::Run, config::Config, globals::TERM_ERR, utils};
 use anyhow::Result;
 use dialoguer::Input;
-use manifest::{Manifest, DESCRIPTION_REGEX, ID_REGEX, NAME_REGEX, SCHEMA};
-use regex::Regex;
+use manifest::{Manifest, SCHEMA};
 use semver::Version;
 use std::{fs::File, path::PathBuf};
 use structopt::StructOpt;
@@ -14,43 +13,49 @@ pub struct Init {
     #[structopt(name = "FILE", default_value = "manifest.json")]
     file: PathBuf,
 
-    /// Mod ID
+    /// ID
     #[structopt(long, name = "ID")]
     id: Option<String>,
 
-    /// Mod name
+    /// Name
     #[structopt(long, name = "NAME")]
     name: Option<String>,
 
-    /// Mod game version
-    #[structopt(long, name = "GAMEVERSION")]
+    /// Game version
+    #[structopt(long, name = "VERSION")]
     game_version: Option<String>,
 
-    /// Mod description
+    /// Description
     #[structopt(long, name = "DESCRIPTION")]
     description: Option<String>,
 
-    /// Mod author
+    /// Author
     #[structopt(long, name = "AUTHOR")]
     author: Option<String>,
 
-    /// Mod license
+    /// License
     #[structopt(long, name = "LICENSE")]
     license: Option<String>,
 }
 
 impl Run for Init {
-    fn run(self, _verbose: bool) -> Result<()> {
+    fn run(self, verbose: bool) -> Result<()> {
         let config = Config::read()?;
 
-        let id = self.id.unwrap_or(ask_until_valid("ID", &*ID_REGEX)?);
-        let name = self.name.unwrap_or(ask_until_valid("Name", &*NAME_REGEX)?);
+        let id = self
+            .id
+            .unwrap_or(Input::new().with_prompt("ID").interact_on(&*TERM_ERR)?);
+        let name = self
+            .name
+            .unwrap_or(Input::new().with_prompt("Name").interact_on(&*TERM_ERR)?);
         let game_version = Input::new()
             .with_prompt("Game version")
             .interact_on(&*TERM_ERR)?;
-        let description = self
-            .description
-            .unwrap_or(ask_until_valid("Description", &*DESCRIPTION_REGEX)?);
+        let description = self.description.unwrap_or(
+            Input::new()
+                .with_prompt("Description")
+                .interact_on(&*TERM_ERR)?,
+        );
 
         let author = self.author.unwrap_or(
             config
@@ -66,7 +71,7 @@ impl Run for Init {
             ),
         );
 
-        let manifest = Manifest {
+        let mut manifest = Manifest {
             schema: SCHEMA.to_owned(),
             id,
             name,
@@ -91,21 +96,13 @@ impl Run for Init {
             publish: Default::default(),
             readme: None,
         };
+        utils::edit_until_valid(&mut manifest)?;
 
+        if verbose {
+            TERM_ERR.write_line("Writing manifest...")?;
+        }
         let f = File::create(&self.file)?;
         manifest.to_writer(f)?;
         Ok(())
     }
-}
-
-fn ask_until_valid(prompt: &str, check: &Regex) -> Result<String> {
-    let mut answer: String;
-    loop {
-        answer = Input::new().with_prompt(prompt).interact_on(&*TERM_ERR)?;
-        if check.is_match(&answer) {
-            break;
-        }
-        TERM_ERR.write_line(&format!("{} doesn't match the manifest format", prompt))?;
-    }
-    Ok(answer)
 }

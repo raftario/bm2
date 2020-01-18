@@ -1,6 +1,9 @@
 use crate::globals::TERM_ERR;
 use anyhow::Result;
 use cfg_if::cfg_if;
+use dialoguer::Input;
+use manifest::{Manifest, ValidityError, DESCRIPTION_REGEX, ID_REGEX, NAME_REGEX};
+use regex::Regex;
 use std::{
     fs::File,
     io::{self, Read, Seek, Write},
@@ -65,4 +68,39 @@ pub fn shell_exec(command_str: &str, output: bool) -> io::Result<ExitStatus> {
         cmd.stderr(Stdio::null());
     }
     cmd.status()
+}
+
+/// Ask for input until it validates against the provided regex
+pub fn ask_until_valid(prompt: &str, check: &Regex) -> Result<String> {
+    let mut answer: String;
+    loop {
+        answer = Input::new().with_prompt(prompt).interact_on(&*TERM_ERR)?;
+        if check.is_match(&answer) {
+            break;
+        }
+        TERM_ERR.clear_last_lines(1)?;
+    }
+    Ok(answer)
+}
+
+/// Ask for modifications until the manifest is valid
+pub fn edit_until_valid(manifest: &mut Manifest) -> Result<()> {
+    while let Err(e) = manifest.validate() {
+        match e {
+            ValidityError::InvalidId => {
+                TERM_ERR.write_line("The current ID doesn't follow the new manifest format (should follow the C# namespace naming convention)")?;
+                manifest.id = ask_until_valid("New ID", &*ID_REGEX)?;
+            }
+            ValidityError::InvalidName => {
+                TERM_ERR.write_line("The current name doesn't follow the new manifest format (should not contain newlines or tabs)")?;
+                manifest.name = ask_until_valid("New name", &*NAME_REGEX)?;
+            }
+            ValidityError::InvalidDescription => {
+                TERM_ERR.write_line("The current description doesn't follow the new manifest format (should not contain newlines)")?;
+                manifest.description =
+                    vec![ask_until_valid("New description", &*DESCRIPTION_REGEX)?];
+            }
+        }
+    }
+    Ok(())
 }

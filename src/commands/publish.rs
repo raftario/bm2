@@ -177,7 +177,7 @@ fn publish_bm1(
     } else if let Some(l) = manifest.links.project_source {
         l.into_string()
     } else {
-        unreachable!();
+        "https://beatmods.com".to_owned()
     };
     let description_string = manifest.description.join("\n");
 

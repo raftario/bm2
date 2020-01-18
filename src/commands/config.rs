@@ -1,7 +1,7 @@
 use crate::{
     commands::Run,
     config::Config as AppConfig,
-    globals::{CONFIG_PATH, TERM_OUT},
+    globals::{CONFIG_PATH, TERM_ERR, TERM_OUT},
 };
 use anyhow::{Context, Result};
 use cfg_if::cfg_if;
@@ -21,13 +21,17 @@ pub struct Config {
 }
 
 impl Run for Config {
-    fn run(self, _verbose: bool) -> Result<()> {
+    #[cfg_attr(not(windows), allow(unused_variables))]
+    fn run(self, verbose: bool) -> Result<()> {
         if self.print_path {
             TERM_OUT.write_line(&format!("{}", CONFIG_PATH.display()))?;
             return Ok(());
         }
         cfg_if! {
             if #[cfg(windows)] {
+                if verbose {
+                    TERM_ERR.write_line("Interactive edit disabled because default editor is notepad")?;
+                }
                 if env::var_os("EDITOR").is_none() && env::var_os("VISUAL").is_none() {
                     TERM_OUT.write_line(&format!("{}", CONFIG_PATH.display()))?;
                     return Ok(());
