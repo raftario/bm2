@@ -19,7 +19,7 @@ use structopt::StructOpt;
 /// CLI for the Beat Saber mod repository BeatMods2
 #[derive(StructOpt, Debug)]
 struct Opt {
-    /// Prints more detailed information
+    /// Prints more information
     #[structopt(short, long)]
     verbose: bool,
 

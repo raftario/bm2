@@ -36,7 +36,7 @@ macro_rules! create_command {
 }
 
 create_command!(
-    Config: "Edit the application config",
-    Migrate: "Migrate a manifest from the old to the new format",
+    Config: "Edits the application config",
+    Migrate: "Migrates a manifest from the old to the new format",
     Publish: "Publishes this mod to BeatMods",
 );
