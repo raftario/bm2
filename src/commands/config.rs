@@ -1,3 +1,4 @@
+#[cfg_attr(not(windows), allow(unused_imports))]
 use crate::{
     commands::Run,
     config::Config as AppConfig,
