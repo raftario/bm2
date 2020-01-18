@@ -2,8 +2,11 @@ mod config;
 mod init;
 mod migrate;
 mod publish;
+mod update;
 
-use crate::commands::{config::Config, init::Init, migrate::Migrate, publish::Publish};
+use crate::commands::{
+    config::Config, init::Init, migrate::Migrate, publish::Publish, update::Update,
+};
 use anyhow::Result;
 use structopt::StructOpt;
 
@@ -41,4 +44,5 @@ create_command!(
     Init: "Initialises a new manifest",
     Migrate: "Migrates a manifest from the old to the new format",
     Publish: "Publishes this mod to BeatMods",
+    Update: "Checks for updates and install them",
 );

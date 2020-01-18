@@ -32,7 +32,7 @@ fn main() -> Result<()> {
         return updater::finish_update();
     }
     if config::Config::read()?.auto_update {
-        updater::update()?;
+        updater::update(true)?;
     }
 
     let opt = Opt::from_args();

@@ -63,7 +63,7 @@ struct ReleaseAsset {
 }
 
 /// Check for updates and installs them
-pub fn update() -> Result<()> {
+pub fn update(clear: bool) -> Result<()> {
     let p = ProgressBar::new_spinner();
     p.set_message("Checking for updates");
     p.enable_steady_tick(100);
@@ -79,7 +79,11 @@ pub fn update() -> Result<()> {
         })
         .collect();
     if new_releases.is_empty() {
-        p.finish_and_clear();
+        if clear {
+            p.finish_and_clear();
+        } else {
+            p.finish()
+        }
         return Ok(());
     }
     new_releases.sort_by(|a, b| b.version.cmp(&a.version));
@@ -92,14 +96,20 @@ pub fn update() -> Result<()> {
         .unwrap()
         .browser_download_url;
 
-    p.finish_and_clear();
+    if clear {
+        p.finish_and_clear();
+    } else {
+        p.finish()
+    }
     let install = Confirmation::new()
         .with_text(&format!(
             "A new version is available, do you want to update? (current: {}, new: {})",
             &*VERSION, new_version
         ))
         .interact_on(&*TERM_ERR)?;
-    TERM_ERR.clear_last_lines(1)?;
+    if clear {
+        TERM_ERR.clear_last_lines(1)?;
+    }
     if !install {
         return Ok(());
     }
@@ -137,7 +147,11 @@ pub fn update() -> Result<()> {
     fs::copy(&current_exe, &old_exe)?;
     fs::write(&new_exe, file)?;
 
-    p.finish_and_clear();
+    if clear {
+        p.finish_and_clear();
+    } else {
+        p.finish()
+    }
     Command::new(old_exe).arg("finish_update").spawn()?;
     thread::sleep(Duration::from_millis(250));
     process::exit(0);
